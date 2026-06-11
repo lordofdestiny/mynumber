@@ -4,3 +4,6 @@
 -Werror
 -O3
 -g
+-Iinclude
+-fvisibility=hidden
+-flto
