@@ -33,8 +33,7 @@ std::generator<int> submasks(int mask) {
   }
 }
 
-std::generator<std::pair<int, int>>
-submask_complement_pairs(int mask, bool symmetry = false) {
+std::generator<std::pair<int, int>> submask_complement_pairs(int mask, bool symmetry = false) {
   for (auto submask : submasks(mask)) {
     auto complement = mask ^ submask;
     if (!symmetry || submask < complement) {
@@ -53,14 +52,10 @@ enum class Operator : unsigned short {
 };
 
 // Define to_string in the same namespace
-std::string to_string(Operator p) {
-  return std::string(1, static_cast<char>(std::to_underlying(p) >> 3));
-}
+std::string to_string(Operator p) { return std::string(1, static_cast<char>(std::to_underlying(p) >> 3)); }
 
 template <> struct std::formatter<Operator> : std::formatter<std::string> {
-  static char to_char(const Operator &op) {
-    return std::to_underlying(op) >> 3;
-  }
+  static char to_char(const Operator &op) { return std::to_underlying(op) >> 3; }
 
   auto format(const Operator &op, std::format_context &ctx) const {
     return std::format_to(ctx.out(), "{}", to_char(op));
@@ -79,9 +74,8 @@ struct StateValue {
     return buffer;
   }
 
-  static std::shared_ptr<StateValue>
-  combine(const std::shared_ptr<StateValue> &left,
-          const std::shared_ptr<StateValue> &right, Operator op) {
+  static std::shared_ptr<StateValue> combine(const std::shared_ptr<StateValue> &left,
+                                             const std::shared_ptr<StateValue> &right, Operator op) {
     auto value = calculate(left->value, right->value, op);
     if (value < 0) {
       std::cout << left->reconstruct() << std::endl;
@@ -120,12 +114,10 @@ private:
     auto parent_prec = precedence(parent_op);
 
     return (current_prec < parent_prec) ||
-           (current_prec == parent_prec and is_right and
-            (parent_op == Operator::SUB || parent_op == Operator::DIV));
+           (current_prec == parent_prec and is_right and (parent_op == Operator::SUB || parent_op == Operator::DIV));
   }
 
-  void reconstruct_impl(std::string &buffer, Operator parent_op,
-                        bool is_right) const {
+  void reconstruct_impl(std::string &buffer, Operator parent_op, bool is_right) const {
     if (op == Operator::NONE) {
       buffer += std::to_string(value);
       return;
@@ -155,10 +147,8 @@ struct Combination {
   std::array<int, 6> numbers{};
 
   friend std::ostream &operator<<(std::ostream &os, const Combination &comb) {
-    return os << std::format("Combination({}, {{ {}, {}, {}, {}, {}, {} }}",
-                             comb.target, comb.numbers[0], comb.numbers[1],
-                             comb.numbers[2], comb.numbers[3], comb.numbers[4],
-                             comb.numbers[5]);
+    return os << std::format("Combination({}, {{ {}, {}, {}, {}, {}, {} }}", comb.target, comb.numbers[0],
+                             comb.numbers[1], comb.numbers[2], comb.numbers[3], comb.numbers[4], comb.numbers[5]);
   }
 
   static Combination generate() {
@@ -189,13 +179,10 @@ struct Combination {
   }
 
   std::vector<std::shared_ptr<StateValue>> allSolutions() const {
-    std::vector<
-        std::unordered_map<int, std::vector<std::shared_ptr<StateValue>>>>
-        states(1 << numbers.size());
+    std::vector<std::unordered_map<int, std::vector<std::shared_ptr<StateValue>>>> states(1 << numbers.size());
 
     for (const auto &[i, v] : std::views::enumerate(numbers)) {
-      states[1 << i][v].push_back(
-          std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr));
+      states[1 << i][v].push_back(std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr));
     }
 
     std::vector<std::shared_ptr<StateValue>> solutions;
@@ -204,15 +191,12 @@ struct Combination {
     for (int mask : std::views::iota(1, 1 << numbers.size())) {
       for (auto [submask1, submask2] : submask_complement_pairs(mask, false)) {
         auto state_vec_pairs =
-            std::views::cartesian_product(std::views::values(states[submask1]),
-                                          std::views::values(states[submask2]));
+            std::views::cartesian_product(std::views::values(states[submask1]), std::views::values(states[submask2]));
 
         for (const auto &[state_vec1, state_vec2] : state_vec_pairs) {
           auto state_pairs =
               std::views::cartesian_product(state_vec1, state_vec2) |
-              std::views::filter([](const auto &pair) {
-                return std::get<0>(pair)->value < std::get<1>(pair)->value;
-              });
+              std::views::filter([](const auto &pair) { return std::get<0>(pair)->value < std::get<1>(pair)->value; });
 
           for (const auto &[state1, state2] : state_pairs) {
 #if defined(__cpp_lib_inplace_vector)
@@ -221,19 +205,14 @@ struct Combination {
             std::vector<std::shared_ptr<StateValue>> new_states;
             new_states.reserve(6);
 #endif
-            new_states.push_back(
-                StateValue::combine(state1, state2, Operator::ADD));
-            new_states.push_back(
-                StateValue::combine(state1, state2, Operator::MUL));
-            new_states.push_back(
-                StateValue::combine(state2, state1, Operator::SUB));
+            new_states.push_back(StateValue::combine(state1, state2, Operator::ADD));
+            new_states.push_back(StateValue::combine(state1, state2, Operator::MUL));
+            new_states.push_back(StateValue::combine(state2, state1, Operator::SUB));
             if (state2->value != 0 && state1->value % state2->value == 0) {
-              new_states.push_back(
-                  StateValue::combine(state1, state2, Operator::DIV));
+              new_states.push_back(StateValue::combine(state1, state2, Operator::DIV));
             }
             if (state1->value != 0 && state2->value % state1->value == 0) {
-              new_states.push_back(
-                  StateValue::combine(state2, state1, Operator::DIV));
+              new_states.push_back(StateValue::combine(state2, state1, Operator::DIV));
             }
 
             for (auto new_state : new_states) {
@@ -257,12 +236,10 @@ struct Combination {
   }
 
   std::shared_ptr<StateValue> solve() const {
-    std::vector<std::unordered_map<int, std::shared_ptr<StateValue>>> states(
-        1 << numbers.size());
+    std::vector<std::unordered_map<int, std::shared_ptr<StateValue>>> states(1 << numbers.size());
 
     for (const auto &[i, v] : std::views::enumerate(numbers)) {
-      states[1 << i][v] =
-          std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr);
+      states[1 << i][v] = std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr);
     }
 
     auto best_diff = std::numeric_limits<int>::max();
@@ -271,8 +248,7 @@ struct Combination {
     for (int mask : std::views::iota(1, 1 << numbers.size())) {
       for (auto [submask1, submask2] : submask_complement_pairs(mask)) {
         auto state_pairs =
-            std::views::cartesian_product(std::views::values(states[submask1]),
-                                          std::views::values(states[submask2]));
+            std::views::cartesian_product(std::views::values(states[submask1]), std::views::values(states[submask2]));
 
         for (const auto &[state1, state2] : state_pairs) {
           auto val1 = state1->value;
@@ -284,25 +260,19 @@ struct Combination {
           std::vector<std::shared_ptr<StateValue>> new_states;
           new_states.reserve(6);
 #endif
-          new_states.push_back(
-              StateValue::combine(state1, state2, Operator::ADD));
-          new_states.push_back(
-              StateValue::combine(state1, state2, Operator::MUL));
+          new_states.push_back(StateValue::combine(state1, state2, Operator::ADD));
+          new_states.push_back(StateValue::combine(state1, state2, Operator::MUL));
           if (val1 > val2) {
-            new_states.push_back(
-                StateValue::combine(state1, state2, Operator::SUB));
+            new_states.push_back(StateValue::combine(state1, state2, Operator::SUB));
           }
           if (val2 > val1) {
-            new_states.push_back(
-                StateValue::combine(state2, state1, Operator::SUB));
+            new_states.push_back(StateValue::combine(state2, state1, Operator::SUB));
           }
           if (val2 != 0 && val1 % val2 == 0) {
-            new_states.push_back(
-                StateValue::combine(state1, state2, Operator::DIV));
+            new_states.push_back(StateValue::combine(state1, state2, Operator::DIV));
           }
           if (val1 != 0 && val2 % val1 == 0) {
-            new_states.push_back(
-                StateValue::combine(state2, state1, Operator::DIV));
+            new_states.push_back(StateValue::combine(state2, state1, Operator::DIV));
           }
 
           for (auto new_state : new_states) {
@@ -363,8 +333,7 @@ TaskResult futureTask(int tasks, int totalTasks) {
 
     int current = ++completedTasks;
     if (current % progressLimit == 0 || current == totalTasks) {
-      oss << "progress: " << std::setw(20)
-          << std::format("{}/{}", current, totalTasks) << std::endl;
+      oss << "progress: " << std::setw(20) << std::format("{}/{}", current, totalTasks) << std::endl;
     }
   }
 
@@ -380,8 +349,7 @@ void benchmarkQuality(int n) {
 
   if (tasksPerThread != 0) {
     for (auto _ : std::views::iota(0u, threadCount)) {
-      futures.push_back(
-          std::async(std::launch::async, futureTask, tasksPerThread, n));
+      futures.push_back(std::async(std::launch::async, futureTask, tasksPerThread, n));
     }
   }
 
@@ -404,17 +372,14 @@ void benchmarkQuality(int n) {
 
   std::cout << "Maximum deviation: " << global_best_diff << std::endl;
   std::cout << "Expected: " << best_comb << std::endl;
-  std::cout << std::format("Found: {} = {}", best_state->reconstruct(),
-                           best_state->value)
-            << std::endl;
+  std::cout << std::format("Found: {} = {}", best_state->reconstruct(), best_state->value) << std::endl;
 }
 
 void playGame() {
   auto comb = Combination::generate();
   std::cout << "Target: " << comb.target << std::endl;
-  std::cout << std::format("Numbers: {} {} {} {}\t{}\t{}", comb.numbers[0],
-                           comb.numbers[1], comb.numbers[2], comb.numbers[3],
-                           comb.numbers[4], comb.numbers[5])
+  std::cout << std::format("Numbers: {} {} {} {}\t{}\t{}", comb.numbers[0], comb.numbers[1], comb.numbers[2],
+                           comb.numbers[3], comb.numbers[4], comb.numbers[5])
             << std::endl;
 
   auto future = std::async(std::launch::async, [&] {
@@ -434,9 +399,7 @@ void playGame() {
 
   [[maybe_unused]] auto block = std::cin.get();
 
-  std::cout << std::format("Computer solution: {} = {}",
-                           solution->reconstruct(), solution->value)
-            << std::endl;
+  std::cout << std::format("Computer solution: {} = {}", solution->reconstruct(), solution->value) << std::endl;
 }
 
 int main(int argc, char **argv) {
@@ -461,8 +424,7 @@ int main(int argc, char **argv) {
 
     int N;
     std::string argN = argv[2];
-    if (std::from_chars(argN.data(), argN.data() + argN.size(), N).ec !=
-        std::errc()) {
+    if (std::from_chars(argN.data(), argN.data() + argN.size(), N).ec != std::errc()) {
       std::cerr << "Argument must be an integer" << std::endl;
       return 0;
     }
