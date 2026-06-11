@@ -213,7 +213,7 @@ struct Combination {
             new_states.push_back(
                 StateValue::combine(state1, state2, Operator::SUB));
           }
-          if (val2 < val1) {
+          if (val2 > val1) {
             new_states.push_back(
                 StateValue::combine(state2, state1, Operator::SUB));
           }
