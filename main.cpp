@@ -5,7 +5,9 @@
 #include <format>
 #include <future>
 #include <generator>
+#include <print>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <unordered_set>
 #if __has_include(<inplace_vector>)
@@ -77,12 +79,6 @@ struct StateValue {
   static std::shared_ptr<StateValue> combine(const std::shared_ptr<StateValue> &left,
                                              const std::shared_ptr<StateValue> &right, Operator op) {
     auto value = calculate(left->value, right->value, op);
-    if (value < 0) {
-      std::cout << left->reconstruct() << std::endl;
-      std::cout << right->reconstruct() << std::endl;
-      std::cout << std::format("{}", op) << std::endl;
-      throw "What the hell";
-    }
     return std::make_shared<StateValue>(value, op, left, right);
   }
 
@@ -178,6 +174,18 @@ struct Combination {
     return {target, numbers};
   }
 
+private:
+  static auto newStateContainer() {
+#if defined(__cpp_lib_inplace_vector)
+    std::inplace_vector<std::shared_ptr<StateValue>, 6> new_states;
+#else
+    std::vector<std::shared_ptr<StateValue>> new_states;
+    new_states.reserve(6);
+#endif
+    return new_states;
+  }
+
+public:
   std::vector<std::shared_ptr<StateValue>> allSolutions() const {
     std::vector<std::unordered_map<int, std::vector<std::shared_ptr<StateValue>>>> states(1 << numbers.size());
 
@@ -199,12 +207,7 @@ struct Combination {
               std::views::filter([](const auto &pair) { return std::get<0>(pair)->value < std::get<1>(pair)->value; });
 
           for (const auto &[state1, state2] : state_pairs) {
-#if defined(__cpp_lib_inplace_vector)
-            std::inplace_vector<std::shared_ptr<StateValue>, 6> new_states;
-#else
-            std::vector<std::shared_ptr<StateValue>> new_states;
-            new_states.reserve(6);
-#endif
+            auto new_states = newStateContainer();
             new_states.push_back(StateValue::combine(state1, state2, Operator::ADD));
             new_states.push_back(StateValue::combine(state1, state2, Operator::MUL));
             new_states.push_back(StateValue::combine(state2, state1, Operator::SUB));
@@ -254,12 +257,8 @@ struct Combination {
           auto val1 = state1->value;
           auto val2 = state2->value;
 
-#if defined(__cpp_lib_inplace_vector)
-          std::inplace_vector<std::shared_ptr<StateValue>, 6> new_states;
-#else
-          std::vector<std::shared_ptr<StateValue>> new_states;
-          new_states.reserve(6);
-#endif
+          auto new_states = newStateContainer();
+
           new_states.push_back(StateValue::combine(state1, state2, Operator::ADD));
           new_states.push_back(StateValue::combine(state1, state2, Operator::MUL));
           if (val1 > val2) {
@@ -375,7 +374,7 @@ void benchmarkQuality(int n) {
   std::cout << std::format("Found: {} = {}", best_state->reconstruct(), best_state->value) << std::endl;
 }
 
-void playGame() {
+template <bool all> void playGame() {
   auto comb = Combination::generate();
   std::cout << "Target: " << comb.target << std::endl;
   std::cout << std::format("Numbers: {} {} {} {}\t{}\t{}", comb.numbers[0], comb.numbers[1], comb.numbers[2],
@@ -383,8 +382,13 @@ void playGame() {
             << std::endl;
 
   auto future = std::async(std::launch::async, [&] {
-    auto sol = comb.solve();
-    return sol;
+    if constexpr (all) {
+      auto sols = comb.allSolutions();
+      return sols;
+    } else {
+      auto sol = comb.solve();
+      return sol;
+    }
   });
 
   using namespace std::chrono_literals;
@@ -396,21 +400,23 @@ void playGame() {
 
   std::cout << "Press enter to see solution..." << std::endl;
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
   [[maybe_unused]] auto block = std::cin.get();
 
-  std::cout << std::format("Computer solution: {} = {}", solution->reconstruct(), solution->value) << std::endl;
+  if constexpr (all) {
+    if (solution.size() == 0) {
+      std::cout << "No exact solutions: " << std::endl;
+      return;
+    }
+    std::cout << "Solution count: " << solution.size() << std::endl;
+    for (auto sol : solution) {
+      std::println("{} = {}", sol->reconstruct(), sol->value);
+    }
+  } else {
+    std::println("Computer solution: {} = {}", solution->reconstruct(), solution->value);
+  }
 }
 
 int main(int argc, char **argv) {
-  auto cmb = Combination{227, {2, 5, 5, 9, 10, 50}};
-  auto sols = cmb.allSolutions();
-  std::cout << "Solution count: " << sols.size() << std::endl;
-  for (auto const &sol : sols) {
-    std::cout << sol->reconstruct() << std::endl;
-  }
-
-  return 0;
   if (argc < 2) {
     std::cerr << "Invalid use" << std::endl;
     return 1;
@@ -426,13 +432,29 @@ int main(int argc, char **argv) {
     std::string argN = argv[2];
     if (std::from_chars(argN.data(), argN.data() + argN.size(), N).ec != std::errc()) {
       std::cerr << "Argument must be an integer" << std::endl;
-      return 0;
+      return 4;
     }
 
     benchmarkQuality(N);
   } else if (std::string_view(argv[1]) == "play") {
-    playGame();
+    if (argc == 2) {
+      playGame<false>();
+      return 0;
+    }
+    if (argc > 3) {
+      std::cerr << "Too many arguments" << std::endl;
+      return 2;
+    }
+    if (std::string_view(argv[2]) == "all") {
+      playGame<true>();
+    } else if (std::string_view(argv[2]) == "solo") {
+      playGame<false>();
+    } else {
+      std::cerr << "Unknown play mode" << std::endl;
+      return 3;
+    }
   } else {
     std::cerr << "Unknown subcomand" << std::endl;
+    return 6;
   }
 }
