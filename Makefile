@@ -5,16 +5,16 @@ main: build/main
 build/main: main.cpp | build
 	g++-15 -std=c++23 -O3 -g -Wall -Wextra -Werror $< -o $@
 
-format: .format
+format: build/.format
 
-.format : main.cpp
+build/.format : main.cpp | build
 	clang-format -i $<
-	@touch .format
+	@touch build/.format
 
 build:
 	@mkdir build
 
 clean:
-	@rm -rf build .format
+	@rm -rf build
 
 .PHONY: all main clean format

@@ -7,6 +7,7 @@
 #include <generator>
 #include <string>
 #include <system_error>
+#include <unordered_set>
 #if __has_include(<inplace_vector>)
 #include <inplace_vector>
 #else
@@ -32,9 +33,13 @@ std::generator<int> submasks(int mask) {
   }
 }
 
-std::generator<std::pair<int, int>> submask_complement_pairs(int mask) {
+std::generator<std::pair<int, int>>
+submask_complement_pairs(int mask, bool symmetry = false) {
   for (auto submask : submasks(mask)) {
-    co_yield {submask, mask ^ submask};
+    auto complement = mask ^ submask;
+    if (!symmetry || submask < complement) {
+      co_yield {submask, complement};
+    }
   }
 }
 
@@ -78,6 +83,12 @@ struct StateValue {
   combine(const std::shared_ptr<StateValue> &left,
           const std::shared_ptr<StateValue> &right, Operator op) {
     auto value = calculate(left->value, right->value, op);
+    if (value < 0) {
+      std::cout << left->reconstruct() << std::endl;
+      std::cout << right->reconstruct() << std::endl;
+      std::cout << std::format("{}", op) << std::endl;
+      throw "What the hell";
+    }
     return std::make_shared<StateValue>(value, op, left, right);
   }
 
@@ -177,27 +188,95 @@ struct Combination {
     return {target, numbers};
   }
 
+  std::vector<std::shared_ptr<StateValue>> allSolutions() const {
+    std::vector<
+        std::unordered_map<int, std::vector<std::shared_ptr<StateValue>>>>
+        states(1 << numbers.size());
+
+    for (const auto &[i, v] : std::views::enumerate(numbers)) {
+      states[1 << i][v].push_back(
+          std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr));
+    }
+
+    std::vector<std::shared_ptr<StateValue>> solutions;
+    std::unordered_set<std::string> seenHashes;
+
+    for (int mask : std::views::iota(1, 1 << numbers.size())) {
+      for (auto [submask1, submask2] : submask_complement_pairs(mask, false)) {
+        auto state_vec_pairs =
+            std::views::cartesian_product(std::views::values(states[submask1]),
+                                          std::views::values(states[submask2]));
+
+        for (const auto &[state_vec1, state_vec2] : state_vec_pairs) {
+          auto state_pairs =
+              std::views::cartesian_product(state_vec1, state_vec2) |
+              std::views::filter([](const auto &pair) {
+                return std::get<0>(pair)->value < std::get<1>(pair)->value;
+              });
+
+          for (const auto &[state1, state2] : state_pairs) {
+#if defined(__cpp_lib_inplace_vector)
+            std::inplace_vector<std::shared_ptr<StateValue>, 6> new_states;
+#else
+            std::vector<std::shared_ptr<StateValue>> new_states;
+            new_states.reserve(6);
+#endif
+            new_states.push_back(
+                StateValue::combine(state1, state2, Operator::ADD));
+            new_states.push_back(
+                StateValue::combine(state1, state2, Operator::MUL));
+            new_states.push_back(
+                StateValue::combine(state2, state1, Operator::SUB));
+            if (state2->value != 0 && state1->value % state2->value == 0) {
+              new_states.push_back(
+                  StateValue::combine(state1, state2, Operator::DIV));
+            }
+            if (state1->value != 0 && state2->value % state1->value == 0) {
+              new_states.push_back(
+                  StateValue::combine(state2, state1, Operator::DIV));
+            }
+
+            for (auto new_state : new_states) {
+              auto str = new_state->reconstruct();
+              if (seenHashes.contains(str)) {
+                continue;
+              }
+
+              states[mask][new_state->value].push_back(new_state);
+              seenHashes.insert(str);
+              if (target - new_state->value == 0) {
+                solutions.push_back(new_state);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return solutions;
+  }
+
   std::shared_ptr<StateValue> solve() const {
-    auto states = generate_initial_state();
+    std::vector<std::unordered_map<int, std::shared_ptr<StateValue>>> states(
+        1 << numbers.size());
+
+    for (const auto &[i, v] : std::views::enumerate(numbers)) {
+      states[1 << i][v] =
+          std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr);
+    }
 
     auto best_diff = std::numeric_limits<int>::max();
     std::shared_ptr<StateValue> best_match;
 
-    static constexpr auto flatten_product =
-        std::views::transform([](const auto &pair) {
-          const auto &[pair1, pair2] = pair;
-          const auto &[val1, state1] = pair1;
-          const auto &[val2, state2] = pair2;
-          return std::make_tuple(val1, state1, val2, state2);
-        });
-
     for (int mask : std::views::iota(1, 1 << numbers.size())) {
       for (auto [submask1, submask2] : submask_complement_pairs(mask)) {
         auto state_pairs =
-            std::views::cartesian_product(states[submask1], states[submask2]);
+            std::views::cartesian_product(std::views::values(states[submask1]),
+                                          std::views::values(states[submask2]));
 
-        for (const auto &[val1, state1, val2, state2] :
-             state_pairs | flatten_product) {
+        for (const auto &[state1, state2] : state_pairs) {
+          auto val1 = state1->value;
+          auto val2 = state2->value;
 
 #if defined(__cpp_lib_inplace_vector)
           std::inplace_vector<std::shared_ptr<StateValue>, 6> new_states;
@@ -252,19 +331,6 @@ struct Combination {
     }
 
     return best_match;
-  }
-
-private:
-  std::vector<std::unordered_map<int, std::shared_ptr<StateValue>>>
-  generate_initial_state() const {
-    std::vector<std::unordered_map<int, std::shared_ptr<StateValue>>> initial(
-        1 << numbers.size());
-
-    for (const auto &[i, v] : std::views::enumerate(numbers)) {
-      initial[1 << i][v] =
-          std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr);
-    }
-    return initial;
   }
 };
 
@@ -374,6 +440,14 @@ void playGame() {
 }
 
 int main(int argc, char **argv) {
+  auto cmb = Combination{227, {2, 5, 5, 9, 10, 50}};
+  auto sols = cmb.allSolutions();
+  std::cout << "Solution count: " << sols.size() << std::endl;
+  for (auto const &sol : sols) {
+    std::cout << sol->reconstruct() << std::endl;
+  }
+
+  return 0;
   if (argc < 2) {
     std::cerr << "Invalid use" << std::endl;
     return 1;
