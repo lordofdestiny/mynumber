@@ -3,7 +3,7 @@ all: main
 main: build/main
 
 build/main: main.cpp | build
-	g++-15 -std=c++23 -O3 -g -Wall -Wextra -Werror $< -o $@
+	g++-15 -std=c++23 -O0 -g -Wall -Wextra -Werror $< -o $@
 
 format: build/.format
 
