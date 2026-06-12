@@ -10,7 +10,7 @@
       ],
       "xcode_settings": {
         "CLANG_CXX_LANGUAGE_STANDARD": "c++23",
-        "OTHER_CFLAGS": [ "-Wall", "-O3", "-stdlib=libstdc++" ]
+        "OTHER_CFLAGS": [ "-Wall", "-O3", ]
       },
       "libraries": [
         "-L../build/lib",

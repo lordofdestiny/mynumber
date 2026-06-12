@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <impl/Export.hpp>
+#include <polyfill/to_underlying.hpp>
 #include <impl/Operator.hpp>
 
 namespace mynum::impl {
@@ -22,7 +23,7 @@ struct StateValue {
 private:
   static int calculate(int left, int right, Operator op);
 
-  static int precedence(Operator op) { return std::to_underlying(op) & 0x7; }
+  static int precedence(Operator op) { return mynum::polyfill::to_underlying(op) & 0x7; }
 
   bool needs_parens(Operator parent_op, bool is_right) const;
 

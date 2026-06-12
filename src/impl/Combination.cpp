@@ -3,7 +3,9 @@
 #else
 #include <vector>
 #endif
-#include <generator>
+#include <iostream>
+#include <polyfill/generator.hpp>
+#include <polyfill/ranges.hpp>
 #include <random>
 #include <ranges>
 #include <unordered_map>
@@ -13,7 +15,7 @@
 
 namespace mynum::impl {
 
-static std::generator<int> submasks(int mask) {
+static mynum::polyfill::generator<int> submasks(int mask) {
   int submask = mask;
   while (submask != 0) {
     submask = (submask - 1) & mask;
@@ -21,7 +23,7 @@ static std::generator<int> submasks(int mask) {
   }
 }
 
-static std::generator<std::pair<int, int>> submask_complement_pairs(int mask, bool symmetry = false) {
+static mynum::polyfill::generator<std::pair<int, int>> submask_complement_pairs(int mask, bool symmetry = false) {
   for (auto submask : submasks(mask)) {
     auto complement = mask ^ submask;
     if (!symmetry || submask < complement) {
@@ -75,7 +77,7 @@ auto Combination::newStateContainer() {
 std::vector<std::shared_ptr<StateValue>> Combination::allSolutions() const {
   std::vector<std::unordered_map<int, std::vector<std::shared_ptr<StateValue>>>> states(1 << numbers.size());
 
-  for (const auto &[i, v] : std::views::enumerate(numbers)) {
+  for (const auto &[i, v] : mynum::compat::views::enumerate(numbers)) {
     states[1 << i][v].push_back(std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr));
   }
 
@@ -84,13 +86,13 @@ std::vector<std::shared_ptr<StateValue>> Combination::allSolutions() const {
 
   for (int mask : std::views::iota(1, 1 << numbers.size())) {
     for (auto [submask1, submask2] : submask_complement_pairs(mask, false)) {
-      auto state_vec_pairs =
-          std::views::cartesian_product(std::views::values(states[submask1]), std::views::values(states[submask2]));
+      auto state_vec_pairs = mynum::compat::views::cartesian_product(mynum::compat::views::values(states[submask1]),
+                                                                    mynum::compat::views::values(states[submask2]));
 
       for (const auto &[state_vec1, state_vec2] : state_vec_pairs) {
         auto state_pairs =
-            std::views::cartesian_product(state_vec1, state_vec2) |
-            std::views::filter([](const auto &pair) { return std::get<0>(pair)->value < std::get<1>(pair)->value; });
+            mynum::compat::views::cartesian_product(state_vec1, state_vec2) |
+            mynum::compat::views::filter([](const auto &pair) { return std::get<0>(pair)->value < std::get<1>(pair)->value; });
 
         for (const auto &[state1, state2] : state_pairs) {
           auto new_states = newStateContainer();
@@ -127,7 +129,7 @@ std::vector<std::shared_ptr<StateValue>> Combination::allSolutions() const {
 std::shared_ptr<StateValue> Combination::solve() const {
   std::vector<std::unordered_map<int, std::shared_ptr<StateValue>>> states(1 << numbers.size());
 
-  for (const auto &[i, v] : std::views::enumerate(numbers)) {
+  for (const auto &[i, v] : mynum::compat::views::enumerate(numbers)) {
     states[1 << i][v] = std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr);
   }
 
@@ -136,8 +138,8 @@ std::shared_ptr<StateValue> Combination::solve() const {
 
   for (int mask : std::views::iota(1, 1 << numbers.size())) {
     for (auto [submask1, submask2] : submask_complement_pairs(mask)) {
-      auto state_pairs =
-          std::views::cartesian_product(std::views::values(states[submask1]), std::views::values(states[submask2]));
+      auto state_pairs = mynum::compat::views::cartesian_product(mynum::compat::views::values(states[submask1]),
+                                                                 mynum::compat::views::values(states[submask2]));
 
       for (const auto &[state1, state2] : state_pairs) {
         auto val1 = state1->value;

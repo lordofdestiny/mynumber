@@ -1,18 +1,28 @@
 #include <atomic>
+#include <charconv>
 #include <future>
 #include <iomanip>
 #include <iostream>
 #include <map>
 #include <print>
-#include <syncstream>
 #include <ranges>
 #include <thread>
+#include <version>
 
 #include <impl/Combination.hpp>
 
 using namespace mynum::impl;
 
 static std::atomic<int> completedTasks = 0;
+
+#if __cpp_lib_syncbuf
+#include <syncstream>
+#else
+// Fallback to mutex locking
+#include <mutex>
+
+static std::mutex cout_mutex;
+#endif
 
 struct TaskResult {
   int count;
@@ -22,7 +32,10 @@ struct TaskResult {
 };
 
 TaskResult futureTask(int tasks, int totalTasks) {
+  #if __cpp_lib_syncbuf
   std::osyncstream oss(std::cout);
+  oss << std::emit_on_flush;
+  #endif
 
   auto local_max_diff = std::numeric_limits<unsigned int>::min();
   std::shared_ptr<StateValue> local_best = nullptr;
@@ -47,7 +60,12 @@ TaskResult futureTask(int tasks, int totalTasks) {
 
     int current = ++completedTasks;
     if (current % progressLimit == 0 || current == totalTasks) {
-      oss << "progress: " << std::setw(15) << std::format("{}/{}", current, totalTasks) << std::endl << std::flush_emit;
+      #if __cpp_lib_syncbuf
+      oss << "progress: " << std::setw(15) << std::format("{}/{}", current, totalTasks) << std::endl;
+      #else
+      std::lock_guard<std::mutex> lock(cout_mutex);
+      std::cout << "progress: " << std::setw(15) << std::format("{}/{}", current, totalTasks) << std::endl;
+      #endif
     }
   }
 
@@ -142,10 +160,10 @@ template <bool all> void playGame() {
     }
     std::cout << "Solution count: " << solution.size() << std::endl;
     for (auto sol : solution) {
-      std::println("{} = {}", sol->reconstruct(), sol->value);
+      std::cout << std::format("{} = {}", sol->reconstruct(), sol->value) << std::endl;
     }
   } else {
-    std::println("Computer solution: {} = {}", solution->reconstruct(), solution->value);
+    std::cout << std::format("Computer solution: {} = {}", solution->reconstruct(), solution->value) << std::endl;
   }
 }
 

@@ -1,5 +1,4 @@
-CC=/opt/homebrew/bin/g-15
-CXX=/opt/homebrew/bin/g++-15
+CXXFLAGS := -std=c++20 -O3 -g -Wall -Wextra -Werror
 
 all: main build/lib/libmynumber.dylib addon
 
@@ -14,7 +13,7 @@ INC_FILES=$(wildcard include/**/*.hpp)
 IMPL_LIB_OBJ=$(filter build/obj/impl/%.o, $(OBJ_FILES))
 
 build/Release/addon.node: build/Release/.configured binding.gyp $(CPP_FILES) $(INC_FILES)
-	@env CC=$(CC) CXX=$(CXX) npx node-gyp build
+	@npx node-gyp build
 
 build/Release/.configured: build/lib/libmynumber.dylib
 	@mkdir -p $(@D)
@@ -23,19 +22,19 @@ build/Release/.configured: build/lib/libmynumber.dylib
 
 build/main: build/obj/main.o build/lib/libmynumber.dylib | build
 	@mkdir -p $(@D)
-	$(CXX) -std=c++23 -O3 -g -Wall -Wextra -Werror -Iinclude -fvisibility=hidden -flto=auto $^ -o $@
+	$(CXX) $(CXXFLAGS) -Iinclude -fvisibility=hidden -flto=auto $^ -o $@
 
 build/lib/libmynumber.dylib: $(IMPL_LIB_OBJ)
 	@mkdir -p $(@D)
-	$(CXX) -std=c++23 -O3 -g -Wall -Wextra -Werror -Iinclude -shared -fvisibility=hidden -flto=auto $^ -o $@
+	$(CXX) $(CXXFLAGS) -Iinclude -shared -fvisibility=hidden -flto=auto $^ -o $@
 
 build/obj/%.o: src/%.cpp | build
 	@mkdir -p $(@D)
-	$(CXX) -std=c++23 -O3 -g -Wall -Wextra -Werror -Iinclude -c -fPIC -fvisibility=hidden -flto=auto $< -o $@
+	$(CXX) $(CXXFLAGS) -Iinclude -c -fPIC -fvisibility=hidden -flto=auto $< -o $@
 
 build/obj/%.o: src/main.cpp | build
 	@mkdir -p $(@D)
-	$(CXX) -std=c++23 -O3 -g -Wall -Wextra -Werror -Iinclude -c -fvisibility=hidden -flto=auto $< -o $@
+	$(CXX) $(CXXFLAGS) -Iinclude -c -fvisibility=hidden -flto=auto $< -o $@
 
 format: build/.format
 
