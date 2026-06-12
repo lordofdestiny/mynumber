@@ -86,8 +86,7 @@ Napi::Object Combination::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("toString", &Combination::ToString),
        InstanceAccessor(toStringTagSymbol, &Combination::ToStringTag, nullptr, napi_default),
        InstanceMethod(inspectSymbol, &Combination::CustomInspect), InstanceMethod("toJSON", &Combination::ToJSON),
-       InstanceMethod("solve", &Combination::Solve),
-       InstanceMethod("allSolutions", &Combination::AllSolutions),
+       InstanceMethod("solve", &Combination::Solve), InstanceMethod("allSolutions", &Combination::AllSolutions),
        StaticMethod("generate", &Combination::Generate)});
 
   constructor = Napi::Persistent(func);
