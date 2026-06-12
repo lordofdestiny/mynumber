@@ -3,18 +3,21 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "node-gyp rebuild"
+    "install": "make",
+    "start": "node index.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "lordofdestiny",
+  "type": "commonjs",
+  "types": "addon.d.ts",
   "gypfile": true,
   "description": "",
   "dependencies": {
     "node-addon-api": "^8.8.0"
   },
   "devDependencies": {
-    "node-gyp": "^12.4.0"
+    "@types/node": "^25.9.3",
+    "node-gyp": "^12.4.0",
+    "typescript": "^6.0.3"
   }
 }

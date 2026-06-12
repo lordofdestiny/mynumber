@@ -17,7 +17,7 @@ build/Release/addon.node: build/Release/.configured binding.gyp $(CPP_FILES) $(I
 	@env CC=$(CC) CXX=$(CXX) npx node-gyp build
 
 build/Release/.configured: build/lib/libmynumber.dylib
-	@mkdir $(@D)
+	@mkdir -p $(@D)
 	@npx node-gyp configure
 	@touch $@
 
@@ -46,7 +46,7 @@ build/.format : $(CPP_FILES) $(INC_FILES) | build
 	@touch build/.format
 
 build:
-	@mkdir build
+	@mkdir -p build
 
 clean:
 	@rm -rf build

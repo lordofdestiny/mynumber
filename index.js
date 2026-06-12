@@ -5,5 +5,4 @@ const sol = comb.solve()
 
 console.log(`Target: ${comb.target}`)
 console.log(`Numbers: ${comb.numbers.slice(0, 4).join(" ")}\t${comb.numbers[4]}\t${comb.numbers[5]}`)
-console.log(`Solution: ${sol.toString()}`)
-
+console.log(`${sol}`)
