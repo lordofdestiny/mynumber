@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include <impl/Operator.hpp>
 #include <impl/Export.hpp>
+#include <impl/Operator.hpp>
 
 namespace mynum::impl {
 
@@ -29,6 +29,6 @@ private:
   void reconstruct_impl(std::string &buffer, Operator parent_op, bool is_right) const;
 };
 
-}
+} // namespace mynum::impl
 
 #endif

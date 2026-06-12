@@ -6,9 +6,8 @@
 #include <memory>
 #include <vector>
 
-#include <impl/StateValue.hpp>
-#include <impl/Utils.hpp>
 #include <impl/Export.hpp>
+#include <impl/StateValue.hpp>
 
 namespace mynum::impl {
 
@@ -29,6 +28,6 @@ public:
   EXPORT_API std::shared_ptr<StateValue> solve() const;
 };
 
-}
+} // namespace mynum::impl
 
 #endif

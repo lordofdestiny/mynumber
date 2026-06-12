@@ -1,12 +1,22 @@
-all: main
+all: main build/lib/libmynumber.dylib addon
 
 main: build/main
+
+addon: build/Release/addon.node
 
 CPP_FILES=$(wildcard src/**/*.cpp)
 OBJ_FILES=$(CPP_FILES:src/%.cpp=build/obj/%.o)
 INC_FILES=$(wildcard include/**/*.hpp)
 
 IMPL_LIB_OBJ=$(filter build/obj/impl/%.o, $(OBJ_FILES))
+
+build/Release/addon.node: build/Release/.configured binding.gyp $(CPP_FILES) $(INC_FILES)
+	@npx node-gyp build
+
+build/Release/.configured: build/lib/libmynumber.dylib
+	@mkdir $(@D)
+	@npx node-gyp configure
+	@touch $@
 
 build/main: build/obj/main.o build/lib/libmynumber.dylib | build
 	@mkdir -p $(@D)
@@ -38,4 +48,4 @@ build:
 clean:
 	@rm -rf build
 
-.PHONY: all main clean format
+.PHONY: all main clean format addon emsc

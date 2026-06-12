@@ -5,5 +5,14 @@
 -O3
 -g
 -Iinclude
+-I/Users/bdjumic/Library/Caches/node-gyp/22.14.0/src
+-I/Users/bdjumic/Library/Caches/node-gyp/22.14.0/deps/openssl/config
+-I/Users/bdjumic/Library/Caches/node-gyp/22.14.0/deps/openssl/openssl/include
+-I/Users/bdjumic/Library/Caches/node-gyp/22.14.0/deps/uv/include
+-I/Users/bdjumic/Library/Caches/node-gyp/22.14.0/deps/zlib
+-I/Users/bdjumic/Library/Caches/node-gyp/22.14.0/deps/v8/include
+-I/Users/bdjumic/Projects/C++/mojbroj/node_modules/node-addon-api
+-I../include
+-I../node_modules/node-addon-api
 -fvisibility=hidden
 -flto

@@ -66,4 +66,4 @@ void StateValue::reconstruct_impl(std::string &buffer, Operator parent_op, bool 
     buffer += ')';
 }
 
-}
+} // namespace mynum::impl

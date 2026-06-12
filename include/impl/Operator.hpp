@@ -20,14 +20,6 @@ enum class Operator : unsigned short {
 
 EXPORT_API std::string to_string(Operator p);
 
-}
-
-template <> struct std::formatter<mynum::impl::Operator> : std::formatter<std::string> {
-  EXPORT_API static char to_char(const mynum::impl::Operator &op) { return std::to_underlying(op) >> 3; }
-
-  EXPORT_API auto format(const mynum::impl::Operator &op, std::format_context &ctx) const {
-    return std::format_to(ctx.out(), "{}", to_char(op));
-  }
-};
+} // namespace mynum::impl
 
 #endif

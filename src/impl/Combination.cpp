@@ -3,14 +3,32 @@
 #else
 #include <vector>
 #endif
+#include <generator>
 #include <random>
+#include <ranges>
 #include <unordered_map>
 #include <unordered_set>
-#include <ranges>
 
 #include <impl/Combination.hpp>
 
 namespace mynum::impl {
+
+static std::generator<int> submasks(int mask) {
+  int submask = mask;
+  while (submask != 0) {
+    submask = (submask - 1) & mask;
+    co_yield submask;
+  }
+}
+
+static std::generator<std::pair<int, int>> submask_complement_pairs(int mask, bool symmetry = false) {
+  for (auto submask : submasks(mask)) {
+    auto complement = mask ^ submask;
+    if (!symmetry || submask < complement) {
+      co_yield {submask, complement};
+    }
+  }
+}
 
 std::ostream &operator<<(std::ostream &os, const Combination &comb) {
   return os << std::format("Combination({}, {{ {}, {}, {}, {}, {}, {} }}", comb.target, comb.numbers[0],
@@ -170,4 +188,4 @@ std::shared_ptr<StateValue> Combination::solve() const {
   return best_match;
 }
 
-}
+} // namespace mynum::impl
