@@ -3,6 +3,7 @@
 #else
 #include <vector>
 #endif
+#include <format>
 #include <iostream>
 #include <polyfill/generator.hpp>
 #include <polyfill/ranges.hpp>

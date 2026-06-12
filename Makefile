@@ -1,53 +1,83 @@
 CXXFLAGS := -std=c++20 -O3 -g -Wall -Wextra -Werror
 
-all: main build/lib/libmynumber.dylib addon
+JOBS ?= $(shell sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
 
-main: build/main
+ifndef MAKELEVEL
+  MAKEFLAGS += --output-sync=line -j$(JOBS)
+endif
 
-addon: build/Release/addon.node
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+  LIB_EXT := dylib
+else
+  LIB_EXT := so
+endif
 
-CPP_FILES=$(wildcard src/**/*.cpp)
-OBJ_FILES=$(CPP_FILES:src/%.cpp=build/obj/%.o)
-INC_FILES=$(wildcard include/**/*.hpp)
+IMPL_SRCS := $(wildcard src/impl/*.cpp)
+WRAPPER_SRCS := $(wildcard src/wrapper/*.cpp)
+INC_FILES := $(wildcard include/**/*.hpp)
 
-IMPL_LIB_OBJ=$(filter build/obj/impl/%.o, $(OBJ_FILES))
+IMPL_OBJS := $(IMPL_SRCS:src/%.cpp=out/obj/%.o)
+MAIN_OBJ := out/obj/main.o
 
-build/Release/addon.node: build/Release/.configured binding.gyp $(CPP_FILES) $(INC_FILES)
-	@npx node-gyp build
+LIB_STATIC := out/lib/libmynumber.a
+LIB_SHARED := out/lib/libmynumber.$(LIB_EXT)
+MAIN_BIN := out/main
+CONFIGURED := build/Release/.configured
+ADDON_BIN := build/Release/addon.node
 
-build/Release/.configured: build/lib/libmynumber.dylib
+.PHONY: all lib main addon node clean format
+
+all: lib main addon
+
+# Standalone C++ library (static + shared)
+lib: $(LIB_STATIC) $(LIB_SHARED)
+
+# Native console application
+main: $(MAIN_BIN)
+
+# Node.js native addon
+addon: $(ADDON_BIN)
+node: addon
+
+$(LIB_STATIC): $(IMPL_OBJS) | out
 	@mkdir -p $(@D)
-	@npx node-gyp configure
-	@touch $@
+	ar rcs $@ $^
 
-build/main: build/obj/main.o build/lib/libmynumber.dylib | build
-	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -Iinclude -fvisibility=hidden -flto=auto $^ -o $@
-
-build/lib/libmynumber.dylib: $(IMPL_LIB_OBJ)
+$(LIB_SHARED): $(IMPL_OBJS) | out
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -Iinclude -shared -fvisibility=hidden -flto=auto $^ -o $@
 
-build/obj/%.o: src/%.cpp | build
+$(MAIN_BIN): $(MAIN_OBJ) $(LIB_STATIC) | out
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -Iinclude -fvisibility=hidden -flto=auto $^ -o $@
+
+$(CONFIGURED): binding.gyp $(LIB_STATIC)
+	@npx node-gyp configure
+	@mkdir -p $(@D)
+	@touch $@
+
+$(ADDON_BIN): $(CONFIGURED) $(LIB_STATIC) $(WRAPPER_SRCS) $(INC_FILES)
+	@npx node-gyp build -j $(JOBS)
+
+out/obj/impl/%.o: src/impl/%.cpp | out
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -Iinclude -c -fPIC -fvisibility=hidden -flto=auto $< -o $@
 
-build/obj/%.o: src/main.cpp | build
+out/obj/main.o: src/main.cpp | out
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -Iinclude -c -fvisibility=hidden -flto=auto $< -o $@
 
-format: build/.format
+format: out/.format
 
-build/.format : $(CPP_FILES) $(INC_FILES) | build
+out/.format: $(IMPL_SRCS) $(WRAPPER_SRCS) src/main.cpp $(INC_FILES) | out
 	@echo "Formatting code..."
-	@echo "$^" | tr ' ' '\n'
 	@clang-format -i $^
-	@touch build/.format
+	@touch $@
 
-build:
-	@mkdir -p build
+out:
+	@mkdir -p out
 
 clean:
-	@rm -rf build
-
-.PHONY: all main clean format addon emsc
+	@rm -rf out
+	@npx node-gyp clean 2>/dev/null || true

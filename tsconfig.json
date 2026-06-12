@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "target": "ES2020",
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "types": ["node"]
+  },
+  "include": ["src/node/**/*.js", "src/node/**/*.d.ts", "test/**/*.js", "test/**/*.ts"],
+  "exclude": ["src/node/native.js", "node_modules", "build", "out"]
+}

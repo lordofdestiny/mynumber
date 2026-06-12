@@ -1,23 +1,53 @@
 {
   "name": "mojbroj",
   "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "install": "make",
-    "start": "node index.js"
+  "description": "Number combination puzzle solver — C++ library, native CLI, and Node.js addon",
+  "main": "src/node/index.js",
+  "types": "src/node/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/node/index.d.ts",
+      "require": "./src/node/index.js",
+      "default": "./src/node/index.js"
+    }
   },
-  "keywords": [],
+  "files": [
+    "binding.gyp",
+    "include",
+    "Makefile",
+    "src"
+  ],
+  "scripts": {
+    "install": "make lib addon",
+    "build": "make lib addon",
+    "build:lib": "make lib",
+    "build:main": "make lib main",
+    "build:node": "make addon",
+    "build:all": "make all",
+    "clean": "make clean",
+    "app": "make lib main && ./out/main",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && node --test test/**/*.test.js",
+    "start": "node -e \"const { Combination } = require('.'); const c = Combination.generate(); console.log(c.solve())\""
+  },
+  "keywords": [
+    "native",
+    "addon",
+    "number-puzzle"
+  ],
   "author": "lordofdestiny",
+  "license": "ISC",
   "type": "commonjs",
-  "types": "addon.d.ts",
   "gypfile": true,
-  "description": "",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
-    "node-addon-api": "^8.8.0"
+    "node-addon-api": "^8.8.0",
+    "node-gyp": "^12.4.0"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",
-    "node-gyp": "^12.4.0",
     "typescript": "^6.0.3"
   }
 }
