@@ -3,76 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mojbroj</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: system-ui, sans-serif;
-        max-width: 32rem;
-        margin: 2rem auto;
-        padding: 0 1rem;
-        line-height: 1.5;
-      }
-
-      h1 {
-        font-size: 1.5rem;
-        margin: 0 0 1rem;
-      }
-
-      label {
-        display: block;
-        margin-bottom: 0.75rem;
-      }
-
-      input[type='number'] {
-        width: 100%;
-        padding: 0.4rem 0.5rem;
-        font: inherit;
-      }
-
-      .numbers {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-      }
-
-      .numbers input {
-        width: 100%;
-      }
-
-      .actions {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-      }
-
-      button {
-        font: inherit;
-        padding: 0.45rem 0.9rem;
-        cursor: pointer;
-      }
-
-      #status {
-        color: #555;
-        min-height: 1.5rem;
-      }
-
-      #result {
-        margin-top: 0.5rem;
-        padding: 0.75rem;
-        background: #f4f4f4;
-        border-radius: 4px;
-        white-space: pre-wrap;
-        min-height: 3rem;
-      }
-    </style>
+    <title>mynumber</title>
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <h1>Mojbroj</h1>
+    <h1>mynumber</h1>
 
     <label>
       Target
@@ -96,96 +31,7 @@
     <div id="status">Loading…</div>
     <div id="result"></div>
 
-    <script src="../out/emscripten/mojbroj.js"></script>
-    <script>
-      /** @type {import('../src/emscripten/index').MojbrojModule | null} */
-      let api = null;
-
-      const targetInput = document.getElementById('target');
-      const numberInputs = [...document.querySelectorAll('#numbers input')];
-      const statusEl = document.getElementById('status');
-      const resultEl = document.getElementById('result');
-      const solveBtn = document.getElementById('solve');
-      const generateBtn = document.getElementById('generate');
-
-      function readNumbers() {
-        return numberInputs.map((input) => Number(input.value));
-      }
-
-      function writeCombination(comb) {
-        targetInput.value = String(comb.target);
-        comb.numbers.forEach((n, i) => {
-          numberInputs[i].value = String(n);
-        });
-      }
-
-      function showSolution(comb, solution) {
-        const exact = solution.value === comb.target;
-        resultEl.textContent =
-          solution.expression() +
-          '\n= ' +
-          solution.value +
-          (exact ? '' : ' (closest to ' + comb.target + ')');
-      }
-
-      function showError(message) {
-        statusEl.textContent = message;
-        resultEl.textContent = '';
-      }
-
-      function deleteNative(obj) {
-        if (obj && typeof obj.delete === 'function') {
-          obj.delete();
-        }
-      }
-
-      function runSolve(comb) {
-        const solution = comb.solve();
-        try {
-          showSolution(comb, solution);
-          statusEl.textContent = '';
-        } finally {
-          deleteNative(solution);
-        }
-      }
-
-      solveBtn.addEventListener('click', () => {
-        if (!api) return;
-        const target = Number(targetInput.value);
-        const numbers = readNumbers();
-        const comb = new api.Combination(target, numbers);
-        try {
-          runSolve(comb);
-        } finally {
-          deleteNative(comb);
-        }
-      });
-
-      generateBtn.addEventListener('click', () => {
-        if (!api) return;
-        const comb = api.Combination.generate();
-        try {
-          writeCombination(comb);
-          runSolve(comb);
-        } finally {
-          deleteNative(comb);
-        }
-      });
-
-      createMojbrojModule()
-        .then((Module) => {
-          api = { Combination: Module.Combination, Solution: Module.Solution };
-          statusEl.textContent = 'Ready';
-          solveBtn.disabled = false;
-          generateBtn.disabled = false;
-        })
-        .catch((err) => {
-          showError('Failed to load WASM. Run: npm run build:wasm, then open http://localhost:8080/demo/');
-          console.error(err);
-        });
-
-      solveBtn.disabled = true;
-      generateBtn.disabled = true;
-    </script>
+    <script src="./mynumber.js"></script>
+    <script src="./app.js"></script>
   </body>
 </html>

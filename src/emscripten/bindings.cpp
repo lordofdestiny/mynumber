@@ -106,7 +106,7 @@ public:
 
 } // namespace
 
-EMSCRIPTEN_BINDINGS(mojbroj) {
+EMSCRIPTEN_BINDINGS(mynumber) {
   emscripten::class_<WasmSolution>("Solution")
       .property("value", &WasmSolution::getValue)
       .function("expression", &WasmSolution::expression)

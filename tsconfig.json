@@ -14,8 +14,9 @@
     "src/node/**/*.d.ts",
     "src/emscripten/**/*.js",
     "src/emscripten/**/*.d.ts",
+    "src/js-fallback/**/*.ts",
     "test/**/*.js",
     "test/**/*.ts"
   ],
-  "exclude": ["src/node/native.js", "node_modules", "build", "out"]
+  "exclude": ["node_modules", "build", "dist", "out", "src/node/index.publish.js", "src/emscripten/index.publish.js"]
 }

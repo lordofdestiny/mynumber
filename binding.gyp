@@ -1,22 +1,43 @@
 {
   "targets": [
     {
-      "target_name": "addon",
+      "target_name": "mynumber",
       "sources": [
         "src/wrapper/addon.cpp",
         "src/wrapper/Combination.cpp",
         "src/wrapper/Solution.cpp"
       ],
+      "cflags!": [
+        "-fvisibility=default"
+      ],
       "cflags_cc": [
         "-std=c++20",
         "-O3",
         "-Wall",
-        "-fvisibility=hidden"
+        "-Wextra",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
       ],
       "xcode_settings": {
         "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
-        "OTHER_CFLAGS": [ "-Wall", "-O3", "-fvisibility=hidden" ]
+        "GCC_SYMBOLS_PRIVATE_EXTERN": "YES",
+        "OTHER_CFLAGS": [
+          "-Wall",
+          "-O3",
+          "-fvisibility=hidden",
+          "-fvisibility-inlines-hidden"
+        ]
       },
+      "conditions": [
+        [
+          "OS=='linux'",
+          {
+            "ldflags": [
+              "-Wl,--exclude-libs,ALL"
+            ]
+          }
+        ]
+      ],
       "msvs_settings": {
         "VCCLCompilerTool": {
           "AdditionalOptions": [ "/std:c++20", "/O2", "/W4" ]
@@ -27,7 +48,7 @@
         "include"
       ],
       "libraries": [
-        "<(module_root_dir)/out/lib/libmynumber.a"
+        "<(module_root_dir)/native-lib/libmynumber.a"
       ],
       "dependencies": [
         "<!(node -p \"require('node-addon-api').targets\"):node_addon_api_except"

@@ -1,7 +1,8 @@
 {
-  "name": "mojbroj",
+  "name": "mynumber",
   "version": "1.0.0",
-  "description": "Number combination puzzle solver — C++ library, native CLI, Node.js addon, and WebAssembly",
+  "private": true,
+  "description": "Number combination puzzle solver — C++ library, Node.js addon, and WebAssembly",
   "main": "src/node/index.js",
   "types": "src/node/index.d.ts",
   "exports": {
@@ -16,25 +17,30 @@
       "default": "./src/emscripten/index.js"
     }
   },
-  "files": [
-    "binding.gyp",
-    "include",
-    "Makefile",
-    "src"
-  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lordofdestiny/mynumber.git"
+  },
   "scripts": {
-    "install": "make lib addon",
-    "build": "make lib addon",
-    "build:lib": "make lib",
-    "build:main": "make lib main",
-    "build:node": "make addon",
-    "build:all": "make all",
-    "build:wasm": "make emscripten",
-    "demo": "npx --yes serve . -l 8080",
+    "build": "npm run build:node && npm run build:wasm",
+    "build:native": "make native dist-native",
+    "build:lib": "make native",
+    "build:main": "make native main",
+    "build:node": "make dist-node",
+    "build:wasm": "make dist-wasm",
+    "build:demo": "make dist-demo",
+    "build:js-fallback": "tsx scripts/compile-js-fallback.mjs",
+    "build:all": "npm run build:js-fallback && make native dist-node dist-wasm dist-demo dist-npm",
+    "stage:npm": "node scripts/stage-npm-packages.mjs",
+    "package:prebuild": "node scripts/package-prebuild.mjs",
+    "lint:packages": "publint dist/npm/mynumber && publint dist/npm/mynumber-wasm",
+    "demo": "npm run build:demo && npx --yes serve dist/demo -l 8080",
     "clean": "make clean",
-    "app": "make lib main && ./out/main",
-    "typecheck": "tsc --noEmit",
+    "app": "make native main && ./build/native/mynumber",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.js-fallback.json --noEmit",
+    "pretest": "npm run build:node && npm run build:wasm && npm run build:js-fallback",
     "test": "npm run typecheck && node --test test/**/*.test.js",
+    "test:consumer": "npm run setup --prefix ../mynumber-test && npm run test --prefix ../mynumber-test",
     "start": "node -e \"const { Combination } = require('.'); const c = Combination.generate(); console.log(c.solve())\""
   },
   "keywords": [
@@ -47,7 +53,6 @@
   "author": "lordofdestiny",
   "license": "ISC",
   "type": "commonjs",
-  "gypfile": true,
   "engines": {
     "node": ">=18.0.0"
   },
@@ -56,7 +61,11 @@
     "node-gyp": "^12.4.0"
   },
   "devDependencies": {
+    "@mapbox/node-pre-gyp": "^2.0.0",
     "@types/node": "^25.9.3",
-    "typescript": "^6.0.3"
+    "node-pre-gyp-github": "^2.0.0",
+    "publint": "^0.3.0",
+    "typescript": "^6.0.3",
+    "tsx": "^4.19.0"
   }
 }

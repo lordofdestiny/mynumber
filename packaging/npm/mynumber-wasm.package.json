@@ -1,0 +1,28 @@
+{
+  "name": "mynumber-wasm",
+  "description": "Number combination puzzle solver — WebAssembly build for Node.js",
+  "type": "commonjs",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "require": "./index.js",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "mynumber.js",
+    "mynumber.wasm"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "wasm",
+    "emscripten",
+    "number-puzzle"
+  ]
+}

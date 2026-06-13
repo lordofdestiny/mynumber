@@ -1,0 +1,50 @@
+{
+  "name": "mynumber",
+  "description": "Number combination puzzle solver — Node.js native addon",
+  "type": "commonjs",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "require": "./index.js",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "binding.gyp",
+    "include",
+    "src",
+    "CMakeLists.txt",
+    "Makefile",
+    "scripts",
+    "lib"
+  ],
+  "scripts": {
+    "install": "node scripts/install-build-lib.js && node-pre-gyp install --fallback-to-build && node scripts/install-copy-binding.js"
+  },
+  "gypfile": true,
+  "dependencies": {
+    "@mapbox/node-pre-gyp": "^2.0.0",
+    "node-addon-api": "^8.8.0",
+    "node-gyp": "^12.4.0"
+  },
+  "binary": {
+    "module_name": "mynumber",
+    "module_path": "./lib/binding/napi-v{napi_build_version}",
+    "host": "https://github.com/__GITHUB_OWNER__/__GITHUB_REPO__/releases/download/",
+    "remote_path": "v{version}",
+    "package_name": "{module_name}-v{version}-{platform}-{arch}-napi-v{napi_build_version}.tar.gz",
+    "napi_versions": [8]
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "native",
+    "addon",
+    "number-puzzle"
+  ]
+}

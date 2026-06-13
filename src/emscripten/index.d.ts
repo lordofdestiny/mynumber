@@ -24,9 +24,9 @@ export class Combination implements ICombination {
   delete(): void;
 }
 
-export interface MojbrojModule {
+export interface MynumberModule {
   Combination: typeof Combination;
   Solution: typeof Solution;
 }
 
-export function load(): Promise<MojbrojModule>;
+export function load(): Promise<MynumberModule>;

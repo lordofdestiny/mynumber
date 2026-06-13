@@ -1,34 +1,18 @@
 'use strict';
 
-const fs = require('fs');
 const path = require('path');
 
 /** @type {Promise<import('./index').MynumberModule> | undefined} */
 let modulePromise;
 
-/** @returns {string} */
-function resolveMynumberJs() {
-  const candidates = [
-    path.join(__dirname, '../../dist/wasm/mynumber.js'),
-    path.join(__dirname, 'mynumber.js'),
-  ];
-
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) {
-      return candidate;
-    }
-  }
-
-  throw new Error('mynumber.js not built. Run npm run build:wasm');
-}
-
 /**
  * Load the WebAssembly module and return exported classes.
+ * Publish layout: mynumber.js is colocated in the package root.
  * @returns {Promise<import('./index').MynumberModule>}
  */
 async function load() {
   if (!modulePromise) {
-    const createModule = require(resolveMynumberJs());
+    const createModule = require(path.join(__dirname, 'mynumber.js'));
     const Module = await createModule();
     modulePromise = Promise.resolve({
       Combination: Module.Combination,

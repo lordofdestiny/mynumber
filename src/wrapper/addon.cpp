@@ -8,4 +8,4 @@ Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
   return Combination::Init(env, exports);
 }
 
-NODE_API_MODULE(addon, InitAll)
+NODE_API_MODULE(mynumber, InitAll)
