@@ -1,5 +1,5 @@
 {
-  "name": "mynumber-wasm",
+  "name": "@lordofdestiny/mynumber-wasm",
   "description": "Number combination puzzle solver — WebAssembly build for Node.js",
   "type": "commonjs",
   "main": "index.js",
@@ -24,5 +24,8 @@
     "wasm",
     "emscripten",
     "number-puzzle"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

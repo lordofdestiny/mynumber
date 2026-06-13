@@ -175,13 +175,13 @@ jobs:
       - name: Lint publish manifests
         run: npm run lint:packages
 
-      - name: Publish mynumber
-        run: npm publish dist/npm/mynumber --access public
+      - name: Publish @lordofdestiny/mynumber
+        run: npm publish dist/npm/mynumber
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish mynumber-wasm
-        run: npm publish dist/npm/mynumber-wasm --access public
+      - name: Publish @lordofdestiny/mynumber-wasm
+        run: npm publish dist/npm/mynumber-wasm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

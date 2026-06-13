@@ -1,5 +1,5 @@
 {
-  "name": "mynumber",
+  "name": "@lordofdestiny/mynumber",
   "description": "Number combination puzzle solver — Node.js native addon",
   "type": "commonjs",
   "main": "index.js",
@@ -46,5 +46,8 @@
     "native",
     "addon",
     "number-puzzle"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
