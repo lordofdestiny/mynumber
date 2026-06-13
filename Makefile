@@ -60,7 +60,7 @@ $(LIB_SHARED): $(LIB_STATIC)
 dist-native: native
 	@mkdir -p $(DIST_NATIVE_DIR)
 	cmake --build $(CMAKE_BUILD_DIR) --target package
-  cp $(CMAKE_BUILD_DIR)/mynumber-*.tar.gz $(DIST_NATIVE_DIR)/ 2>/dev/null || true
+	cp $(CMAKE_BUILD_DIR)/mynumber-*.tar.gz $(DIST_NATIVE_DIR)/ 2>/dev/null || true
 
 # Native console application
 main: $(MAIN_BIN)
