@@ -395,12 +395,12 @@ npm install /path/to/mojbroj/dist/npm/mynumber
 
 Pushing a `v*` tag triggers `[.github/workflows/release.yml](.github/workflows/release.yml)`, which:
 
-1. Creates `mynumber-cmake-{version}.zip` and `.tar.gz` — minimal native C++ source; used to build native CPack `.tar.gz` releases
-2. Builds native CPack `.tar.gz` archives from that package
+1. Creates `mynumber-cmake-{version}.zip` and `.tar.gz` — minimal native C++ source; used to build native CPack releases
+2. Builds native CPack `.tar.gz` and `.zip` archives from that package
 3. Builds Node addon and WASM from the monorepo (`make dist-node`, `make dist-wasm`)
 4. Publishes `@lordofdestiny/mynumber` and `@lordofdestiny/mynumber-wasm` to npm
 5. Deploys the browser demo to GitHub Pages
-6. Attaches ten [release assets](#github-release-assets) (each distribution in `.zip` and `.tar.gz` where applicable)
+6. Attaches twelve [release assets](#github-release-assets) (each distribution in `.zip` and `.tar.gz`)
 
 ### Version bumps
 
@@ -418,11 +418,12 @@ To bump manually: edit `packaging/project.json`, then run `npm run sync-version`
 
 ## GitHub Release assets
 
-Each [release](https://github.com/lordofdestiny/mynumber/releases) attaches ten archives:
+Each [release](https://github.com/lordofdestiny/mynumber/releases) attaches twelve archives (each distribution in `.zip` and `.tar.gz`):
 
 | Pattern | Contents |
 |---------|----------|
-| `mynumber-{version}-{platform}.tar.gz` | Native C++ library, headers, and CLI binary |
+| `mynumber-{version}-{platform}.zip` | Native C++ library, headers, and CLI binary (zip) |
+| `mynumber-{version}-{platform}.tar.gz` | Same native bundle (tar.gz) |
 | `mynumber-cmake-{version}.zip` | Minimal native C++ source + CMake project (zip) |
 | `mynumber-cmake-{version}.tar.gz` | Same cmake source bundle (tar.gz) |
 | `mynumber-node-{version}-{platform}.zip` | Node addon: `mynumber.node` + `index.d.ts` (zip) |
@@ -432,8 +433,8 @@ Each [release](https://github.com/lordofdestiny/mynumber/releases) attaches ten 
 
 **Platforms** (native and Node)
 
-- macOS — `Darwin` in native `.tar.gz`, `macos` in node archives
-- Linux — `Linux` in native `.tar.gz`, `linux` in node archives
+- macOS — `Darwin` in native archives, `macos` in node archives
+- Linux — `Linux` in native archives, `linux` in node archives
 
 WASM and the CMake bundle are platform-independent. Node prebuild tarballs (`mynumber-v*-napi-*.tar.gz`) are not published as release assets; npm install uses the node release `.tar.gz` files above.
 

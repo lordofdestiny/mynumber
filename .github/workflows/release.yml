@@ -72,6 +72,7 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p upload/native-release
           cp "dist/release/mynumber-cmake-${VERSION}/build/mynumber-${VERSION}-"*.tar.gz upload/native-release/
+          cp "dist/release/mynumber-cmake-${VERSION}/build/mynumber-${VERSION}-"*.zip upload/native-release/
           ls -la upload/native-release/
 
       - name: Upload CPack artifact
@@ -214,8 +215,8 @@ jobs:
             -type f \( -name '*.tar.gz' -o -name '*.zip' \) -exec cp {} release-assets/ \;
           echo "Release assets:"
           ls -la release-assets/
-          test "$(find release-assets -type f | wc -l)" -eq 10 || {
-            echo "Expected 10 release files (2 native, 2 cmake, 4 node, 2 wasm)" >&2
+          test "$(find release-assets -type f | wc -l)" -eq 12 || {
+            echo "Expected 12 release files (4 native, 2 cmake, 4 node, 2 wasm)" >&2
             exit 1
           }
 

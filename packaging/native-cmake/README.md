@@ -2,7 +2,7 @@
 
 Maintainer reference for `scripts/package-source.mjs`. This README is **not** included in the release archives.
 
-CI publishes `mynumber-cmake-{version}.zip` and `.tar.gz` with the same contents.
+CI publishes `mynumber-cmake-{version}.zip` and `.tar.gz` with the same contents. CPack produces matching `.zip` and `.tar.gz` native binaries per platform.
 
 The staged archive contains only files required to build the native CPack release (`.tar.gz`):
 

@@ -69,7 +69,9 @@ cp "$CMAKE_ZIP" "$NATIVE_STAGE/"
   cmake --build build --target package
 )
 NATIVE_TGZ=(dist/release/native-pipeline-test/mynumber-cmake-"${VERSION}"/build/mynumber-"${VERSION}"-*.tar.gz)
+NATIVE_ZIP=(dist/release/native-pipeline-test/mynumber-cmake-"${VERSION}"/build/mynumber-"${VERSION}"-*.zip)
 check "${NATIVE_TGZ[0]}" "native CPack .tar.gz"
+check "${NATIVE_ZIP[0]}" "native CPack .zip"
 
 echo
 echo "--- build-node ---"
@@ -130,17 +132,17 @@ echo
 echo "--- release asset collection ---"
 mkdir -p dist/release-assets-test
 cp "$CMAKE_ZIP" "$CMAKE_TAR" dist/release-assets-test/
-cp "${NATIVE_TGZ[0]}" dist/release-assets-test/
+cp "${NATIVE_TGZ[0]}" "${NATIVE_ZIP[0]}" dist/release-assets-test/
 cp "$NODE_ZIP" "$NODE_TAR" dist/release-assets-test/ 2>/dev/null || true
 cp "dist/release/mynumber-wasm-${VERSION}.zip" "dist/release/mynumber-wasm-${VERSION}.tar.gz" dist/release-assets-test/ 2>/dev/null || true
 RELEASE_COUNT=$(find dist/release-assets-test -type f | wc -l | tr -d ' ')
 echo "Collected ${RELEASE_COUNT} release asset(s):"
 ls -la dist/release-assets-test/
-if [[ "$RELEASE_COUNT" -ge 7 ]]; then
-  echo "  OK  release asset collection (local macOS; CI expects 10 with both platforms)"
+if [[ "$RELEASE_COUNT" -ge 8 ]]; then
+  echo "  OK  release asset collection (local macOS; CI expects 12 with both platforms)"
   PASS=$((PASS + 1))
 else
-  echo "  FAIL release asset collection (expected >= 7 on local macOS-only run)"
+  echo "  FAIL release asset collection (expected >= 8 on local macOS-only run)"
   FAIL=$((FAIL + 1))
 fi
 
