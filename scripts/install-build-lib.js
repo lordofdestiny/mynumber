@@ -31,7 +31,7 @@ if (!hasCmake()) {
 
 const jobs = process.env.JOBS || require('node:os').cpus().length;
 
-execSync('cmake -B native-lib/cmake-build -DCMAKE_BUILD_TYPE=Release -DMYNUMBER_BUILD_CLI=OFF', {
+execSync('cmake -B native-lib/cmake-build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DMYNUMBER_BUILD_CLI=OFF', {
   cwd: root,
   stdio: 'inherit',
 });

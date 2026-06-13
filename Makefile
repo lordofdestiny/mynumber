@@ -3,6 +3,7 @@ CXXFLAGS := -std=c++20 -O3 -g -Wall -Wextra -Werror
 JOBS ?= $(shell sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
 CMAKE_BUILD_TYPE ?= Release
 CMAKE_BUILD_DIR := build/native
+CMAKE_ARGS := -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE)
 
 ifndef MAKELEVEL
   MAKEFLAGS += --output-sync=line -j$(JOBS)
@@ -50,7 +51,7 @@ native: lib
 lib: $(LIB_STATIC) $(LIB_SHARED)
 
 $(LIB_STATIC): CMakeLists.txt $(IMPL_SRCS) $(INC_FILES)
-	cmake -B $(CMAKE_BUILD_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE)
+	cmake -B $(CMAKE_BUILD_DIR) $(CMAKE_ARGS)
 	cmake --build $(CMAKE_BUILD_DIR) --target mynumber_static --parallel $(JOBS)
 
 $(LIB_SHARED): $(LIB_STATIC)
@@ -78,23 +79,23 @@ dist-node: $(ADDON_BIN)
 	cp src/node/index.js $(DIST_NODE_DIR)/index.js
 	cp src/node/index.d.ts $(DIST_NODE_DIR)/index.d.ts
 
-define copy_native_lib
+$(CONFIGURED): binding.gyp $(LIB_STATIC)
 	@mkdir -p native-lib
 	@test -f $(LIB_STATIC) || (echo "missing $(LIB_STATIC); run make lib first" >&2; exit 1)
 	@cp $(LIB_STATIC) $(NATIVE_LIB)
-endef
-
-$(CONFIGURED): binding.gyp $(LIB_STATIC)
-	$(copy_native_lib)
 	@npx node-gyp configure
 	@mkdir -p $(@D)
 	@touch $@
 
 $(NATIVE_LIB): $(LIB_STATIC)
-	$(copy_native_lib)
+	@mkdir -p native-lib
+	@test -f $(LIB_STATIC) || (echo "missing $(LIB_STATIC); run make lib first" >&2; exit 1)
+	@cp $(LIB_STATIC) $(NATIVE_LIB)
 
 $(ADDON_BIN): $(CONFIGURED) $(LIB_STATIC) $(WRAPPER_SRCS) $(INC_FILES)
-	$(copy_native_lib)
+	@mkdir -p native-lib
+	@test -f $(LIB_STATIC) || (echo "missing $(LIB_STATIC); run make lib first" >&2; exit 1)
+	@cp $(LIB_STATIC) $(NATIVE_LIB)
 	@npx node-gyp build -j $(JOBS)
 
 # WebAssembly build (requires em++ on PATH)
