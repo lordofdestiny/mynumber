@@ -78,6 +78,7 @@ copyDir(path.join(root, 'include'), path.join(distNative, 'include'));
 copyDir(path.join(root, 'src/impl'), path.join(distNative, 'src/impl'));
 copyDir(path.join(root, 'src/wrapper'), path.join(distNative, 'src/wrapper'));
 copyFile(path.join(root, 'scripts/install.js'), path.join(distNative, 'scripts/install.js'));
+copyFile(path.join(root, 'scripts/install-release-binary.js'), path.join(distNative, 'scripts/install-release-binary.js'));
 copyFile(path.join(root, 'scripts/install-binding.js'), path.join(distNative, 'scripts/install-binding.js'));
 copyFile(path.join(root, 'scripts/install-build-lib.js'), path.join(distNative, 'scripts/install-build-lib.js'));
 copyFile(path.join(root, 'scripts/install-copy-binding.js'), path.join(distNative, 'scripts/install-copy-binding.js'));

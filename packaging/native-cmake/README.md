@@ -1,8 +1,10 @@
 # mynumber — native CMake source package
 
-Maintainer reference for `scripts/package-source.mjs`. This README is **not** included in the release zip.
+Maintainer reference for `scripts/package-source.mjs`. This README is **not** included in the release archives.
 
-The staged archive contains only files required to build the native CPack release (`.tar.gz` / `.zip`):
+CI publishes `mynumber-cmake-{version}.zip` and `.tar.gz` with the same contents.
+
+The staged archive contains only files required to build the native CPack release (`.tar.gz`):
 
 - `CMakeLists.txt`, `cmake/`, `packaging/project.json`
 - `include/mynumber.hpp`, `include/impl/`, `include/polyfill/`
@@ -10,7 +12,7 @@ The staged archive contains only files required to build the native CPack releas
 
 Node and WASM release binaries are built from the full monorepo (`make dist-node`, `make dist-wasm`).
 
-## Build (from extracted zip)
+## Build (from extracted zip or tar.gz)
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release

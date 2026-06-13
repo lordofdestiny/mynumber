@@ -28,11 +28,19 @@ jobs:
       - name: Create native CMake source package
         run: node scripts/package-source.mjs
 
+      - name: Stage cmake source for upload
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p upload/cmake-source
+          cp "dist/release/mynumber-cmake-${VERSION}.zip" upload/cmake-source/
+          cp "dist/release/mynumber-cmake-${VERSION}.tar.gz" upload/cmake-source/
+
       - name: Upload source package
         uses: actions/upload-artifact@v4
         with:
           name: source-release
-          path: dist/release/mynumber-cmake-*.zip
+          path: upload/cmake-source/
+          if-no-files-found: error
 
   build-native:
     name: Native (${{ matrix.os }})
@@ -59,13 +67,19 @@ jobs:
           cmake --build build --parallel
           cmake --build build --target package
 
+      - name: Collect native release archives
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p upload/native-release
+          cp "dist/release/mynumber-cmake-${VERSION}/build/mynumber-${VERSION}-"*.tar.gz upload/native-release/
+          ls -la upload/native-release/
+
       - name: Upload CPack artifact
         uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.os }}
-          path: |
-            dist/release/mynumber-cmake-*/build/mynumber-*.tar.gz
-            dist/release/mynumber-cmake-*/build/mynumber-*.zip
+          path: upload/native-release/
+          if-no-files-found: error
 
   build-node:
     name: Node addon (${{ matrix.os }})
@@ -91,31 +105,28 @@ jobs:
           cp build/native/libmynumber.a native-lib/libmynumber.a
           make dist-node
           npm run stage:npm:native
-          npm run package:prebuild
 
-      - name: Upload prebuild tarball
+      - name: Package node release archives
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PLATFORM="${{ matrix.os == 'macos-latest' && 'macos' || 'linux' }}"
+          mkdir -p upload/node-release
+          BASENAME="mynumber-node-${VERSION}-${PLATFORM}"
+          cd dist/node
+          zip -j "../../upload/node-release/${BASENAME}.zip" mynumber.node index.d.ts
+          tar -czf "../../upload/node-release/${BASENAME}.tar.gz" mynumber.node index.d.ts
+          ls -la "../../upload/node-release/"
+
+      - name: Upload node release archives
         uses: actions/upload-artifact@v4
         with:
-          name: prebuild-${{ matrix.os }}
-          path: dist/npm/mynumber/build/stage/**/*.tar.gz
+          name: node-release-${{ matrix.os }}
+          path: upload/node-release/
+          if-no-files-found: error
 
       - name: Remove staged npm build debris
         if: always()
         run: rm -rf dist/npm/mynumber/build dist/npm/mynumber/lib/binding
-
-      - name: Package node release archive
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          mkdir -p dist/release
-          ARCHIVE="mynumber-node-${VERSION}-${{ matrix.os == 'macos-latest' && 'macos' || 'linux' }}.zip"
-          cd dist/node
-          zip -j "../release/${ARCHIVE}" mynumber.node index.d.ts
-
-      - name: Upload node release archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-release-${{ matrix.os }}
-          path: dist/release/mynumber-node-*.zip
 
   build-wasm:
     name: WebAssembly
@@ -142,18 +153,21 @@ jobs:
             dist/wasm/mynumber.js
             dist/wasm/mynumber.wasm
 
-      - name: Upload wasm release archive
+      - name: Package wasm release archives
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          mkdir -p dist/release
+          mkdir -p upload/wasm-release
           cd dist/wasm
-          zip -j "../release/mynumber-wasm-${VERSION}.zip" mynumber.js mynumber.wasm index.d.ts
+          zip -j "../../upload/wasm-release/mynumber-wasm-${VERSION}.zip" mynumber.js mynumber.wasm index.d.ts
+          tar -czf "../../upload/wasm-release/mynumber-wasm-${VERSION}.tar.gz" mynumber.js mynumber.wasm index.d.ts
+          ls -la "../../upload/wasm-release/"
 
-      - name: Upload wasm release artifact
+      - name: Upload wasm release archives
         uses: actions/upload-artifact@v4
         with:
           name: wasm-release
-          path: dist/release/mynumber-wasm-*.zip
+          path: upload/wasm-release/
+          if-no-files-found: error
 
   build-demo:
     name: Demo site
@@ -192,18 +206,23 @@ jobs:
         with:
           path: artifacts
 
+      - name: Collect release assets
+        run: |
+          mkdir -p release-assets
+          find artifacts/source-release artifacts/native-macos-latest artifacts/native-ubuntu-latest \
+            artifacts/node-release-macos-latest artifacts/node-release-ubuntu-latest artifacts/wasm-release \
+            -type f \( -name '*.tar.gz' -o -name '*.zip' \) -exec cp {} release-assets/ \;
+          echo "Release assets:"
+          ls -la release-assets/
+          test "$(find release-assets -type f | wc -l)" -eq 10 || {
+            echo "Expected 10 release files (2 native, 2 cmake, 4 node, 2 wasm)" >&2
+            exit 1
+          }
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            artifacts/source-release/mynumber-cmake-*.zip
-            artifacts/native-macos-latest/*
-            artifacts/native-ubuntu-latest/*
-            artifacts/prebuild-macos-latest/*
-            artifacts/prebuild-ubuntu-latest/*
-            artifacts/node-release-macos-latest/*.zip
-            artifacts/node-release-ubuntu-latest/*.zip
-            artifacts/wasm-release/*.zip
+          files: release-assets/*
 
   publish-npm:
     name: Publish npm packages

@@ -60,7 +60,7 @@ From a prebuilt release `.tar.gz`, link `lib/libmynumber.a` directly. On macOS, 
 
 **Build and install from source (CMake bundle)**
 
-Download `mynumber-cmake-{version}.zip` from [release assets](#github-release-assets). This archive is the minimal native C++ source tree; CI uses it to produce the native `.tar.gz` release binaries.
+Download `mynumber-cmake-{version}.zip` or `.tar.gz` from [release assets](#github-release-assets). This archive is the minimal native C++ source tree; CI uses it to produce the native `.tar.gz` release binaries.
 
 ```bash
 unzip mynumber-cmake-*.zip
@@ -122,11 +122,11 @@ npm install @lordofdestiny/mynumber-wasm     # Node.js or browser (via bundler)
 
 High-performance native addon. On `npm install`, the package:
 
-1. **Downloads a prebuild** from [GitHub Releases](https://github.com/lordofdestiny/mynumber/releases) when one is available (see [release assets](#github-release-assets))
-2. **Compiles from source** if no prebuild is available (requires cmake, a C++20 compiler, and optional `node-gyp` deps)
+1. **Downloads a platform release archive** (`mynumber-node-{version}-{platform}.tar.gz`) from [GitHub Releases](https://github.com/lordofdestiny/mynumber/releases) when available (see [release assets](#github-release-assets))
+2. **Compiles from source** if no release binary is available (requires cmake, a C++20 compiler, and optional `node-gyp` deps)
 3. **Falls back to pure JS** at runtime if no native binary can be loaded
 
-At runtime the loader tries, in order: colocated binary → prebuild → compiled binary → `lib/js` fallback.
+At runtime the loader tries, in order: colocated binary → release tarball → compiled binary → `lib/js` fallback.
 
 ### Usage
 
@@ -241,7 +241,7 @@ const comb = new Combination(24, [3, 3, 8, 8, 2, 2]);
 // ... same API as Node.js; call .delete() when done
 ```
 
-Ensure `mynumber.wasm` is served alongside your bundle (most bundlers copy it from `node_modules/@lordofdestiny/mynumber-wasm/`). Alternatively, download `mynumber-wasm-{version}.zip` from [GitHub Releases](https://github.com/lordofdestiny/mynumber/releases) (see [release assets](#github-release-assets)) and host `mynumber.js` + `mynumber.wasm` yourself.
+Ensure `mynumber.wasm` is served alongside your bundle (most bundlers copy it from `node_modules/@lordofdestiny/mynumber-wasm/`). Alternatively, download `mynumber-wasm-{version}.zip` or `.tar.gz` from [GitHub Releases](https://github.com/lordofdestiny/mynumber/releases) (see [release assets](#github-release-assets)) and host `mynumber.js` + `mynumber.wasm` yourself.
 
 ### TypeScript
 
@@ -395,12 +395,12 @@ npm install /path/to/mojbroj/dist/npm/mynumber
 
 Pushing a `v*` tag triggers `[.github/workflows/release.yml](.github/workflows/release.yml)`, which:
 
-1. Creates `mynumber-cmake-{version}.zip` — minimal native C++ source; used to build native CPack `.tar.gz` releases
+1. Creates `mynumber-cmake-{version}.zip` and `.tar.gz` — minimal native C++ source; used to build native CPack `.tar.gz` releases
 2. Builds native CPack `.tar.gz` archives from that package
-3. Builds Node addon/prebuilds and WASM from the monorepo (`make dist-node`, `make dist-wasm`)
+3. Builds Node addon and WASM from the monorepo (`make dist-node`, `make dist-wasm`)
 4. Publishes `@lordofdestiny/mynumber` and `@lordofdestiny/mynumber-wasm` to npm
 5. Deploys the browser demo to GitHub Pages
-6. Attaches six [release assets](#github-release-assets)
+6. Attaches ten [release assets](#github-release-assets) (each distribution in `.zip` and `.tar.gz` where applicable)
 
 ### Version bumps
 
@@ -418,21 +418,24 @@ To bump manually: edit `packaging/project.json`, then run `npm run sync-version`
 
 ## GitHub Release assets
 
-Each [release](https://github.com/lordofdestiny/mynumber/releases) attaches six archives:
+Each [release](https://github.com/lordofdestiny/mynumber/releases) attaches ten archives:
 
 | Pattern | Contents |
 |---------|----------|
 | `mynumber-{version}-{platform}.tar.gz` | Native C++ library, headers, and CLI binary |
-| `mynumber-cmake-{version}.zip` | Minimal native C++ source + CMake project; used to build and install the library (`find_package` / pkg-config) |
-| `mynumber-node-{version}-{platform}.zip` | Node addon: `mynumber.node` + `index.d.ts` |
-| `mynumber-wasm-{version}.zip` | WASM: `mynumber.js` + `mynumber.wasm` + `index.d.ts` |
+| `mynumber-cmake-{version}.zip` | Minimal native C++ source + CMake project (zip) |
+| `mynumber-cmake-{version}.tar.gz` | Same cmake source bundle (tar.gz) |
+| `mynumber-node-{version}-{platform}.zip` | Node addon: `mynumber.node` + `index.d.ts` (zip) |
+| `mynumber-node-{version}-{platform}.tar.gz` | Same node addon bundle (tar.gz); used by `npm install` |
+| `mynumber-wasm-{version}.zip` | WASM: `mynumber.js` + `mynumber.wasm` + `index.d.ts` (zip) |
+| `mynumber-wasm-{version}.tar.gz` | Same WASM bundle (tar.gz) |
 
 **Platforms** (native and Node)
 
-- macOS — `Darwin` in `.tar.gz`, `macos` in `.zip`
-- Linux — `Linux` in `.tar.gz`, `linux` in `.zip`
+- macOS — `Darwin` in native `.tar.gz`, `macos` in node archives
+- Linux — `Linux` in native `.tar.gz`, `linux` in node archives
 
-WASM and the CMake bundle are platform-independent.
+WASM and the CMake bundle are platform-independent. Node prebuild tarballs (`mynumber-v*-napi-*.tar.gz`) are not published as release assets; npm install uses the node release `.tar.gz` files above.
 
 
 ---

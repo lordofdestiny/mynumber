@@ -12,7 +12,9 @@ const root = path.resolve(__dirname, '..');
 const version = getVersion();
 const bundleRoot = `mynumber-cmake-${version}`;
 const stageDir = path.join(root, 'dist/release', bundleRoot);
-const outZip = path.join(root, 'dist/release', `mynumber-cmake-${version}.zip`);
+const outDir = path.join(root, 'dist/release');
+const outZip = path.join(outDir, `mynumber-cmake-${version}.zip`);
+const outTarGz = path.join(outDir, `mynumber-cmake-${version}.tar.gz`);
 
 /** @param {string} src @param {string} dest */
 function copyFile(src, dest) {
@@ -46,14 +48,22 @@ copyDir(path.join(root, 'include/polyfill'), path.join(stageDir, 'include/polyfi
 copyDir(path.join(root, 'src/impl'), path.join(stageDir, 'src/impl'));
 copyFile(path.join(root, 'src/main.cpp'), path.join(stageDir, 'src/main.cpp'));
 
-fs.mkdirSync(path.dirname(outZip), { recursive: true });
-if (fs.existsSync(outZip)) {
-  fs.rmSync(outZip);
+fs.mkdirSync(outDir, { recursive: true });
+for (const archive of [outZip, outTarGz]) {
+  if (fs.existsSync(archive)) {
+    fs.rmSync(archive);
+  }
 }
 
 execSync(`zip -r "${outZip}" "${bundleRoot}"`, {
-  cwd: path.join(root, 'dist/release'),
+  cwd: outDir,
+  stdio: 'inherit',
+});
+
+execSync(`tar -czf "${outTarGz}" "${bundleRoot}"`, {
+  cwd: outDir,
   stdio: 'inherit',
 });
 
 console.log(`Created ${outZip}`);
+console.log(`Created ${outTarGz}`);

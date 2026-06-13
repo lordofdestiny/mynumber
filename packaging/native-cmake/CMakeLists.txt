@@ -122,12 +122,11 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/mynumber.pc"
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-include(CPack)
 set(CPACK_PACKAGE_NAME mynumber)
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Number combination puzzle solver C++ library")
 set(CPACK_PACKAGE_VENDOR "lordofdestiny")
-set(CPACK_GENERATOR "TGZ;ZIP")
+set(CPACK_GENERATOR "TGZ")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
-set(CPACK_BINARY_TZ OFF CACHE BOOL "Disable compress(.Z) packages" FORCE)
-set(CPACK_BINARY_STGZ OFF CACHE BOOL "Disable self-extracting .sh packages" FORCE)
+
+include(CPack)

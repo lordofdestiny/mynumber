@@ -50,7 +50,9 @@ echo
 echo "--- package-source ---"
 node scripts/package-source.mjs
 CMAKE_ZIP="dist/release/mynumber-cmake-${VERSION}.zip"
+CMAKE_TAR="dist/release/mynumber-cmake-${VERSION}.tar.gz"
 check "$CMAKE_ZIP" "cmake source zip"
+check "$CMAKE_TAR" "cmake source tar.gz"
 
 echo
 echo "--- build-native (from cmake zip) ---"
@@ -77,27 +79,18 @@ mkdir -p native-lib
 cp build/native/libmynumber.a native-lib/libmynumber.a
 make dist-node
 npm run stage:npm:native
-npm run package:prebuild
 
-PREBUILD=(dist/npm/mynumber/build/stage/**/*.tar.gz)
-# bash glob
-shopt -s nullglob
-PREBUILD_FILES=(dist/npm/mynumber/build/stage/**/*.tar.gz)
-shopt -u nullglob
-if ((${#PREBUILD_FILES[@]} > 0)); then
-  check "${PREBUILD_FILES[0]}" "node-pre-gyp prebuild tarball"
-else
-  echo "  FAIL node-pre-gyp prebuild tarball"
-  echo "       missing: dist/npm/mynumber/build/stage/**/*.tar.gz"
-  FAIL=$((FAIL + 1))
-fi
-
+NODE_BASENAME="mynumber-node-${VERSION}-${NODE_PLATFORM}"
 mkdir -p dist/release
-NODE_ZIP="dist/release/mynumber-node-${VERSION}-${NODE_PLATFORM}.zip"
-(cd dist/node && zip -j "../release/mynumber-node-${VERSION}-${NODE_PLATFORM}.zip" mynumber.node index.d.ts)
+NODE_ZIP="dist/release/${NODE_BASENAME}.zip"
+NODE_TAR="dist/release/${NODE_BASENAME}.tar.gz"
+(cd dist/node && zip -j "../release/${NODE_BASENAME}.zip" mynumber.node index.d.ts)
+(cd dist/node && tar -czf "../release/${NODE_BASENAME}.tar.gz" mynumber.node index.d.ts)
 check "$NODE_ZIP" "node release zip"
+check "$NODE_TAR" "node release tar.gz"
 check_zip_contains "$NODE_ZIP" "mynumber.node" "node zip contains mynumber.node"
 check_zip_contains "$NODE_ZIP" "index.d.ts" "node zip contains index.d.ts"
+tar -tzf "$NODE_TAR" | grep -qx "mynumber.node" && echo "  OK  node tar contains mynumber.node" && PASS=$((PASS + 1)) || { echo "  FAIL node tar contains mynumber.node"; FAIL=$((FAIL + 1)); }
 
 rm -rf dist/npm/mynumber/build dist/npm/mynumber/lib/binding
 
@@ -108,8 +101,11 @@ if command -v em++ >/dev/null 2>&1; then
   check dist/wasm/mynumber.js "wasm mynumber.js"
   check dist/wasm/mynumber.wasm "wasm mynumber.wasm"
   WASM_ZIP="dist/release/mynumber-wasm-${VERSION}.zip"
+  WASM_TAR="dist/release/mynumber-wasm-${VERSION}.tar.gz"
   (cd dist/wasm && zip -j "../release/mynumber-wasm-${VERSION}.zip" mynumber.js mynumber.wasm index.d.ts)
+  (cd dist/wasm && tar -czf "../release/mynumber-wasm-${VERSION}.tar.gz" mynumber.js mynumber.wasm index.d.ts)
   check "$WASM_ZIP" "wasm release zip"
+  check "$WASM_TAR" "wasm release tar.gz"
   check_zip_contains "$WASM_ZIP" "mynumber.js" "wasm zip contains mynumber.js"
   check_zip_contains "$WASM_ZIP" "mynumber.wasm" "wasm zip contains mynumber.wasm"
   check_zip_contains "$WASM_ZIP" "index.d.ts" "wasm zip contains index.d.ts"
@@ -128,6 +124,24 @@ if [[ -f dist/wasm/mynumber.js && -f dist/wasm/mynumber.wasm ]]; then
   check dist/demo/mynumber.wasm "demo wasm binary"
 else
   echo "  SKIP demo (wasm not built)"
+fi
+
+echo
+echo "--- release asset collection ---"
+mkdir -p dist/release-assets-test
+cp "$CMAKE_ZIP" "$CMAKE_TAR" dist/release-assets-test/
+cp "${NATIVE_TGZ[0]}" dist/release-assets-test/
+cp "$NODE_ZIP" "$NODE_TAR" dist/release-assets-test/ 2>/dev/null || true
+cp "dist/release/mynumber-wasm-${VERSION}.zip" "dist/release/mynumber-wasm-${VERSION}.tar.gz" dist/release-assets-test/ 2>/dev/null || true
+RELEASE_COUNT=$(find dist/release-assets-test -type f | wc -l | tr -d ' ')
+echo "Collected ${RELEASE_COUNT} release asset(s):"
+ls -la dist/release-assets-test/
+if [[ "$RELEASE_COUNT" -ge 7 ]]; then
+  echo "  OK  release asset collection (local macOS; CI expects 10 with both platforms)"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL release asset collection (expected >= 7 on local macOS-only run)"
+  FAIL=$((FAIL + 1))
 fi
 
 echo

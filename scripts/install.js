@@ -4,25 +4,36 @@ const { execSync } = require('node:child_process');
 const path = require('node:path');
 
 const root = path.join(__dirname, '..');
-const pkgPath = path.join(root, 'package.json');
 const { hasBinding } = require('./install-binding');
+const { tryInstallFromNodeRelease } = require('./install-release-binary');
 
 function run(command) {
   execSync(command, { cwd: root, stdio: 'inherit' });
 }
 
-if (!hasBinding()) {
-  try {
-    run('node-pre-gyp install');
-  } catch {
-    // Prebuild download failed; compile fallback below.
+async function main() {
+  if (!hasBinding()) {
+    const installed = await tryInstallFromNodeRelease();
+    if (!installed) {
+      // Optional legacy node-pre-gyp prebuild naming.
+      try {
+        run('node-pre-gyp install');
+      } catch {
+        // Release download and prebuild failed; compile fallback below.
+      }
+    }
   }
+
+  if (!hasBinding()) {
+    run('node scripts/install-build-lib.js');
+    run('node-pre-gyp rebuild');
+    run('node scripts/install-copy-binding.js');
+  }
+
+  run('node scripts/install-cleanup.js');
 }
 
-if (!hasBinding()) {
-  run('node scripts/install-build-lib.js');
-  run('node-pre-gyp rebuild');
-  run('node scripts/install-copy-binding.js');
-}
-
-run('node scripts/install-cleanup.js');
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
