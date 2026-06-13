@@ -9,6 +9,13 @@
     "esModuleInterop": true,
     "types": ["node"]
   },
-  "include": ["src/node/**/*.js", "src/node/**/*.d.ts", "test/**/*.js", "test/**/*.ts"],
+  "include": [
+    "src/node/**/*.js",
+    "src/node/**/*.d.ts",
+    "src/emscripten/**/*.js",
+    "src/emscripten/**/*.d.ts",
+    "test/**/*.js",
+    "test/**/*.ts"
+  ],
   "exclude": ["src/node/native.js", "node_modules", "build", "out"]
 }

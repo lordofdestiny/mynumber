@@ -1,7 +1,7 @@
 {
   "name": "mojbroj",
   "version": "1.0.0",
-  "description": "Number combination puzzle solver — C++ library, native CLI, and Node.js addon",
+  "description": "Number combination puzzle solver — C++ library, native CLI, Node.js addon, and WebAssembly",
   "main": "src/node/index.js",
   "types": "src/node/index.d.ts",
   "exports": {
@@ -9,6 +9,11 @@
       "types": "./src/node/index.d.ts",
       "require": "./src/node/index.js",
       "default": "./src/node/index.js"
+    },
+    "./wasm": {
+      "types": "./src/emscripten/index.d.ts",
+      "require": "./src/emscripten/index.js",
+      "default": "./src/emscripten/index.js"
     }
   },
   "files": [
@@ -24,6 +29,8 @@
     "build:main": "make lib main",
     "build:node": "make addon",
     "build:all": "make all",
+    "build:wasm": "make emscripten",
+    "demo": "npx --yes serve . -l 8080",
     "clean": "make clean",
     "app": "make lib main && ./out/main",
     "typecheck": "tsc --noEmit",
@@ -33,6 +40,8 @@
   "keywords": [
     "native",
     "addon",
+    "wasm",
+    "emscripten",
     "number-puzzle"
   ],
   "author": "lordofdestiny",
