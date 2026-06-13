@@ -33,6 +33,7 @@
     "build:js-fallback": "tsx scripts/compile-js-fallback.mjs",
     "build:all": "npm run build:js-fallback && make native dist-node dist-wasm dist-demo dist-npm",
     "stage:npm": "node scripts/stage-npm-packages.mjs",
+    "stage:npm:native": "node scripts/stage-npm-packages.mjs --native-only",
     "package:prebuild": "node scripts/package-prebuild.mjs",
     "lint:packages": "publint dist/npm/mynumber && publint dist/npm/mynumber-wasm",
     "demo": "npm run build:demo && npx --yes serve dist/demo -l 8080",

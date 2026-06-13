@@ -12,7 +12,7 @@ const pkgDir = path.join(root, 'dist/npm/mynumber');
 const addon = path.join(pkgDir, 'mynumber.node');
 
 if (!fs.existsSync(addon)) {
-  console.error('dist/npm/mynumber/mynumber.node not found. Run: npm run stage:npm');
+  console.error('dist/npm/mynumber/mynumber.node not found. Run: npm run stage:npm:native');
   process.exit(1);
 }
 

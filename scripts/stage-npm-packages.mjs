@@ -54,6 +54,7 @@ function writePkg(dest, pkg) {
 const rootPkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const npmConfig = JSON.parse(fs.readFileSync(path.join(root, 'packaging/npm/config.json'), 'utf8'));
 const { owner, repo } = npmConfig.github;
+const nativeOnly = process.argv.includes('--native-only');
 
 const distNative = path.join(root, 'dist/npm/mynumber');
 const distWasm = path.join(root, 'dist/npm/mynumber-wasm');
@@ -104,33 +105,34 @@ writePkg(path.join(distNative, 'package.json'), {
 
 const wasmJs = path.join(root, 'dist/wasm/mynumber.js');
 const wasmBin = path.join(root, 'dist/wasm/mynumber.wasm');
-if (!fs.existsSync(wasmJs) || !fs.existsSync(wasmBin)) {
-  console.error('dist/wasm/mynumber.{js,wasm} not found. Run: npm run build:wasm');
-  process.exit(1);
+if (!nativeOnly) {
+  if (!fs.existsSync(wasmJs) || !fs.existsSync(wasmBin)) {
+    console.error('dist/wasm/mynumber.{js,wasm} not found. Run: npm run build:wasm');
+    process.exit(1);
+  }
+
+  emptyDir(distWasm);
+
+  copyFile(path.join(root, 'src/emscripten/index.publish.js'), path.join(distWasm, 'index.js'));
+  copyFile(path.join(root, 'src/emscripten/index.d.ts'), path.join(distWasm, 'index.d.ts'));
+  copyFile(wasmJs, path.join(distWasm, 'mynumber.js'));
+  copyFile(wasmBin, path.join(distWasm, 'mynumber.wasm'));
+
+  const wasmTemplate = JSON.parse(
+    fs.readFileSync(path.join(root, 'packaging/npm/mynumber-wasm.package.json'), 'utf8'),
+  );
+
+  writePkg(path.join(distWasm, 'package.json'), {
+    ...wasmTemplate,
+    version: rootPkg.version,
+    author: rootPkg.author,
+    license: rootPkg.license,
+    repository: rootPkg.repository ?? {
+      type: 'git',
+      url: `git+https://github.com/${owner}/${repo}.git`,
+    },
+  });
 }
 
-emptyDir(distWasm);
-
-copyFile(path.join(root, 'src/emscripten/index.publish.js'), path.join(distWasm, 'index.js'));
-copyFile(path.join(root, 'src/emscripten/index.d.ts'), path.join(distWasm, 'index.d.ts'));
-copyFile(wasmJs, path.join(distWasm, 'mynumber.js'));
-copyFile(wasmBin, path.join(distWasm, 'mynumber.wasm'));
-
-const wasmTemplate = JSON.parse(
-  fs.readFileSync(path.join(root, 'packaging/npm/mynumber-wasm.package.json'), 'utf8'),
-);
-
-writePkg(path.join(distWasm, 'package.json'), {
-  ...wasmTemplate,
-  version: rootPkg.version,
-  author: rootPkg.author,
-  license: rootPkg.license,
-  repository: rootPkg.repository ?? {
-    type: 'git',
-    url: `git+https://github.com/${owner}/${repo}.git`,
-  },
-});
-
 console.log(`Staged npm packages:
-  ${distNative}
-  ${distWasm}`);
+  ${distNative}${nativeOnly ? '' : `\n  ${distWasm}`}`);

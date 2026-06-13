@@ -59,7 +59,7 @@ jobs:
           mkdir -p native-lib
           cp build/native/libmynumber.a native-lib/libmynumber.a
           make dist-node
-          npm run stage:npm
+          npm run stage:npm:native
           npm run package:prebuild
 
       - name: Upload prebuild tarball
