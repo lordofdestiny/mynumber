@@ -5,7 +5,6 @@
 #include <iostream>
 #include <map>
 #include <format>
-#include <ranges>
 #include <thread>
 #include <version>
 
@@ -44,7 +43,7 @@ TaskResult futureTask(int tasks, int totalTasks) {
 
   const int progressLimit = totalTasks / 100;
 
-  for (auto _ : std::views::iota(0, tasks)) {
+  for (int i = 0; i < tasks; ++i) {
     auto cmb = Combination::generate();
     auto res = cmb.solve();
 
@@ -80,7 +79,7 @@ void benchmarkQuality(int n) {
   int remaining = n % threadCount;
 
   if (tasksPerThread != 0) {
-    for (auto _ : std::views::iota(0u, threadCount)) {
+    for (unsigned i = 0; i < threadCount; ++i) {
       const auto tasks = [=, &remaining] {
         auto total = tasksPerThread;
         if (remaining > 0) {
