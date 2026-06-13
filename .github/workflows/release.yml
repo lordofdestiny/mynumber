@@ -180,12 +180,18 @@ jobs:
         run: npm run lint:packages
 
       - name: Publish @lordofdestiny/mynumber
-        run: npm publish dist/npm/mynumber
+        run: npm publish dist/npm/mynumber --access public
+        with:
+          registry-url: https://registry.npmjs.org
+          scope: '@lordofdestiny'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @lordofdestiny/mynumber-wasm
-        run: npm publish dist/npm/mynumber-wasm
+        run: npm publish dist/npm/mynumber-wasm --access public
+        with:
+          registry-url: https://registry.npmjs.org
+          scope: '@lordofdestiny'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
