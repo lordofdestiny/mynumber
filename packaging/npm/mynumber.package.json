@@ -35,9 +35,6 @@
   "binary": {
     "module_name": "mynumber",
     "module_path": "./lib/binding/napi-v{napi_build_version}",
-    "host": "https://github.com/__GITHUB_OWNER__/__GITHUB_REPO__/releases/download/",
-    "remote_path": "v{version}",
-    "package_name": "{module_name}-v{version}-{platform}-{arch}-napi-v{napi_build_version}.tar.gz",
     "napi_versions": [8]
   },
   "engines": {

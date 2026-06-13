@@ -83,6 +83,8 @@ copyFile(path.join(root, 'scripts/install-binding.js'), path.join(distNative, 's
 copyFile(path.join(root, 'scripts/install-build-lib.js'), path.join(distNative, 'scripts/install-build-lib.js'));
 copyFile(path.join(root, 'scripts/install-copy-binding.js'), path.join(distNative, 'scripts/install-copy-binding.js'));
 copyFile(path.join(root, 'scripts/install-cleanup.js'), path.join(distNative, 'scripts/install-cleanup.js'));
+copyFile(path.join(root, 'scripts/native-platform.js'), path.join(distNative, 'scripts/native-platform.js'));
+copyFile(path.join(root, 'scripts/copy-native-static-lib.js'), path.join(distNative, 'scripts/copy-native-static-lib.js'));
 
 execSync('npm run build:js-fallback:publish', { cwd: root, stdio: 'inherit' });
 const jsFallbackOut = path.join(root, 'build/js-fallback-publish/index.js');

@@ -36,6 +36,22 @@
               "-Wl,--exclude-libs,ALL"
             ]
           }
+        ],
+        [
+          "OS=='win'",
+          {
+            "libraries": [
+              "<(module_root_dir)/native-lib/mynumber.lib"
+            ]
+          }
+        ],
+        [
+          "OS!='win'",
+          {
+            "libraries": [
+              "<(module_root_dir)/native-lib/libmynumber.a"
+            ]
+          }
         ]
       ],
       "msvs_settings": {
@@ -46,9 +62,6 @@
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
         "include"
-      ],
-      "libraries": [
-        "<(module_root_dir)/native-lib/libmynumber.a"
       ],
       "dependencies": [
         "<!(node -p \"require('node-addon-api').targets\"):node_addon_api_except"

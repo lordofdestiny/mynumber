@@ -13,15 +13,7 @@ function run(command) {
 
 async function main() {
   if (!hasBinding()) {
-    const installed = await tryInstallFromNodeRelease();
-    if (!installed) {
-      // Optional legacy node-pre-gyp prebuild naming.
-      try {
-        run('node-pre-gyp install');
-      } catch {
-        // Release download and prebuild failed; compile fallback below.
-      }
-    }
+    await tryInstallFromNodeRelease();
   }
 
   if (!hasBinding()) {

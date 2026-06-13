@@ -65,7 +65,7 @@ cp "$CMAKE_ZIP" "$NATIVE_STAGE/"
   unzip -q "mynumber-cmake-${VERSION}.zip"
   cd "mynumber-cmake-${VERSION}"
   cmake -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
-  cmake --build build --parallel
+  cmake --build build --target verify_native_artifacts --parallel
   cmake --build build --target package
 )
 NATIVE_TGZ=(dist/release/native-pipeline-test/mynumber-cmake-"${VERSION}"/build/mynumber-"${VERSION}"-*.tar.gz)
@@ -139,7 +139,7 @@ RELEASE_COUNT=$(find dist/release-assets-test -type f | wc -l | tr -d ' ')
 echo "Collected ${RELEASE_COUNT} release asset(s):"
 ls -la dist/release-assets-test/
 if [[ "$RELEASE_COUNT" -ge 8 ]]; then
-  echo "  OK  release asset collection (local macOS; CI expects 12 with both platforms)"
+  echo "  OK  release asset collection (local macOS; CI expects 16 with all platforms)"
   PASS=$((PASS + 1))
 else
   echo "  FAIL release asset collection (expected >= 8 on local macOS-only run)"

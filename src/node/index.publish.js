@@ -51,10 +51,10 @@ function loadColocated() {
 }
 
 /**
- * Tier 1 (prebuild): binary installed by node-pre-gyp from GitHub Release prebuilds.
+ * Tier 1 (release): binary downloaded by install-release-binary.js into lib/binding/.
  * @returns {{ Combination: unknown; Solution?: unknown } | undefined}
  */
-function loadPrebuild() {
+function loadInstalledBinding() {
   const preGyp = require('@mapbox/node-pre-gyp');
   const pkgPath = path.join(__dirname, 'package.json');
 
@@ -70,8 +70,8 @@ function loadPrebuild() {
 }
 
 /**
- * Tier 2 (compile): binary built locally by node-gyp during install --fallback-to-build.
- * node-pre-gyp leaves N-API builds in build-tmp-napi-v8/Release (and similar dirs).
+ * Tier 2 (compile): binary built locally by node-gyp during install.
+ * node-gyp leaves N-API builds in build-tmp-napi-v8/Release (and similar dirs).
  * @returns {{ Combination: unknown; Solution?: unknown } | undefined}
  */
 function loadCompiled() {
@@ -101,7 +101,7 @@ function loadJsFallback() {
 
 /** @returns {{ addon: { Combination: unknown; Solution?: unknown }; features: { allSolutions: boolean }; implementation: 'native' | 'js' }} */
 function resolveAddon() {
-  const nativeLoaders = [loadColocated, loadPrebuild, loadCompiled];
+  const nativeLoaders = [loadColocated, loadInstalledBinding, loadCompiled];
   const errors = [];
 
   for (const load of nativeLoaders) {

@@ -81,7 +81,7 @@ dist-node: $(ADDON_BIN)
 $(CONFIGURED): binding.gyp $(LIB_STATIC)
 	@mkdir -p native-lib
 	@test -f $(LIB_STATIC) || (echo "missing $(LIB_STATIC); run make lib first" >&2; exit 1)
-	@cp $(LIB_STATIC) $(NATIVE_LIB)
+	@node scripts/copy-native-static-lib.js $(CMAKE_BUILD_DIR)
 	@npx node-gyp configure
 	@mkdir -p $(@D)
 	@touch $@
@@ -89,12 +89,12 @@ $(CONFIGURED): binding.gyp $(LIB_STATIC)
 $(NATIVE_LIB): $(LIB_STATIC)
 	@mkdir -p native-lib
 	@test -f $(LIB_STATIC) || (echo "missing $(LIB_STATIC); run make lib first" >&2; exit 1)
-	@cp $(LIB_STATIC) $(NATIVE_LIB)
+	@node scripts/copy-native-static-lib.js $(CMAKE_BUILD_DIR)
 
 $(ADDON_BIN): $(CONFIGURED) $(LIB_STATIC) $(WRAPPER_SRCS) $(INC_FILES)
 	@mkdir -p native-lib
 	@test -f $(LIB_STATIC) || (echo "missing $(LIB_STATIC); run make lib first" >&2; exit 1)
-	@cp $(LIB_STATIC) $(NATIVE_LIB)
+	@node scripts/copy-native-static-lib.js $(CMAKE_BUILD_DIR)
 	@npx node-gyp build -j $(JOBS)
 
 # WebAssembly build (requires em++ on PATH)

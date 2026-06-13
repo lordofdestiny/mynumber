@@ -14,8 +14,8 @@ The core solver is a C++20 library (`mynum::impl`) shipped as static and shared 
 
 | Output | Path (local build) |
 |--------|-------------------|
-| Static library | `build/native/libmynumber.a` |
-| Shared library | `build/native/libmynumber.{so,dylib}` |
+| Static library | `build/native/libmynumber.a` (Unix) or `build/native/Release/mynumber.lib` (Windows MSVC) |
+| Shared library | `build/native/libmynumber.{so,dylib,dll}` (CMake `verify_native_artifacts` checks the extension) |
 | Headers | `include/` (`mynumber.hpp` and `include/impl/`) |
 
 **API**
@@ -56,7 +56,7 @@ target_link_libraries(myapp PRIVATE mynumber::mynumber_shared)
 
 Or with pkg-config: `g++ -std=c++20 -o myapp main.cpp $(pkg-config --cflags --libs mynumber)`.
 
-From a prebuilt release `.tar.gz`, link `lib/libmynumber.a` directly. On macOS, avoid bare `-lmynumber` against a local extract — it picks the `.dylib` without an rpath.
+From a prebuilt release archive, link `lib/libmynumber.a` (Unix) or `lib/mynumber.lib` (Windows static). When linking the shared library on Windows, use `mynumber.dll` with the import library `mynumber.lib` and the CMake-generated `Export.hpp` (`EXPORT_API` / `MYNUMBER_BUILT_AS_STATIC`). On macOS, avoid bare `-lmynumber` against a local extract — it picks the `.dylib` without an rpath.
 
 **Build and install from source (CMake bundle)**
 
@@ -122,8 +122,8 @@ npm install @lordofdestiny/mynumber-wasm     # Node.js or browser (via bundler)
 
 High-performance native addon. On `npm install`, the package:
 
-1. **Downloads a platform release archive** (`mynumber-node-{version}-{platform}.tar.gz`) from [GitHub Releases](https://github.com/lordofdestiny/mynumber/releases) when available (see [release assets](#github-release-assets))
-2. **Compiles from source** if no release binary is available (requires cmake, a C++20 compiler, and optional `node-gyp` deps)
+1. **Downloads a platform release archive** (`mynumber-node-{version}-{platform}.tar.gz` or `.zip` on Windows) from [GitHub Releases](https://github.com/lordofdestiny/mynumber/releases) when available (see [release assets](#github-release-assets))
+2. **Compiles from source** if no release binary is available (requires cmake, a C++20 compiler — MSVC on Windows — and optional `node-gyp` deps)
 3. **Falls back to pure JS** at runtime if no native binary can be loaded
 
 At runtime the loader tries, in order: colocated binary → release tarball → compiled binary → `lib/js` fallback.
@@ -275,7 +275,7 @@ Every package exports `implementation` (which backend is active) and `features` 
 
 | `implementation` | Package                        | When                                                          |
 | ---------------- | ------------------------------ | ------------------------------------------------------------- |
-| `'native'`       | `@lordofdestiny/mynumber`      | `.node` addon loaded (prebuild, compile, or colocated binary) — [release assets](#github-release-assets) |
+| `'native'`       | `@lordofdestiny/mynumber`      | `.node` addon loaded (release download, compile, or colocated binary) — [release assets](#github-release-assets) |
 | `'js'`           | `@lordofdestiny/mynumber`      | Pure-JS fallback (no native binary available)                 |
 | `'wasm'`         | `@lordofdestiny/mynumber-wasm` | WebAssembly module (Node.js or browser)                       |
 
@@ -321,7 +321,7 @@ mojbroj/
 ├── packaging/
 │   ├── npm/          Published package templates
 │   └── project.json  Canonical version + GitHub metadata
-├── scripts/          Staging, install, prebuild packaging
+├── scripts/          Staging, install, release packaging
 ├── src/
 │   ├── emscripten/   WASM bindings
 │   ├── impl/         Core solver (C++)
@@ -337,7 +337,7 @@ mojbroj/
 
 ### Prerequisites
 
-- **C++20** toolchain (clang/gcc)
+- **C++20** toolchain (clang/gcc on macOS/Linux; MSVC or clang-cl on Windows)
 - **CMake** ≥ 3.20
 - **Node.js** ≥ 18
 - **Emscripten** (`em++` on PATH) for WASM builds
@@ -400,7 +400,7 @@ Pushing a `v*` tag triggers `[.github/workflows/release.yml](.github/workflows/r
 3. Builds Node addon and WASM from the monorepo (`make dist-node`, `make dist-wasm`)
 4. Publishes `@lordofdestiny/mynumber` and `@lordofdestiny/mynumber-wasm` to npm
 5. Deploys the browser demo to GitHub Pages
-6. Attaches twelve [release assets](#github-release-assets) (each distribution in `.zip` and `.tar.gz`)
+6. Attaches sixteen [release assets](#github-release-assets) (each distribution in `.zip` and `.tar.gz`)
 
 ### Version bumps
 
@@ -418,7 +418,7 @@ To bump manually: edit `packaging/project.json`, then run `npm run sync-version`
 
 ## GitHub Release assets
 
-Each [release](https://github.com/lordofdestiny/mynumber/releases) attaches twelve archives (each distribution in `.zip` and `.tar.gz`):
+Each [release](https://github.com/lordofdestiny/mynumber/releases) attaches sixteen archives (each distribution in `.zip` and `.tar.gz`):
 
 | Pattern | Contents |
 |---------|----------|
@@ -435,8 +435,9 @@ Each [release](https://github.com/lordofdestiny/mynumber/releases) attaches twel
 
 - macOS — `Darwin` in native archives, `macos` in node archives
 - Linux — `Linux` in native archives, `linux` in node archives
+- Windows — `Windows` in native archives, `windows` in node archives
 
-WASM and the CMake bundle are platform-independent. Node prebuild tarballs (`mynumber-v*-napi-*.tar.gz`) are not published as release assets; npm install uses the node release `.tar.gz` files above.
+WASM and the CMake bundle are platform-independent. npm install uses the node release archives above (`.zip` preferred on Windows).
 
 
 ---

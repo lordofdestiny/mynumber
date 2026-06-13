@@ -49,7 +49,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+          - os: ubuntu-latest
+          - os: windows-latest
     steps:
       - name: Download source package
         uses: actions/download-artifact@v4
@@ -57,22 +60,36 @@ jobs:
           name: source-release
           path: dist/release
 
-      - name: Build CPack archives
+      - name: Build CPack archives (Unix)
+        if: runner.os != 'Windows'
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           cd dist/release
           unzip -q "mynumber-cmake-${VERSION}.zip"
           cd "mynumber-cmake-${VERSION}"
           cmake -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --parallel
+          cmake --build build --target verify_native_artifacts --parallel
           cmake --build build --target package
 
+      - name: Build CPack archives (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $VERSION = $env:GITHUB_REF_NAME.Substring(1)
+          Set-Location dist/release
+          Expand-Archive -Path "mynumber-cmake-$VERSION.zip" -DestinationPath . -Force
+          Set-Location "mynumber-cmake-$VERSION"
+          cmake -B build
+          cmake --build build --config Release --target verify_native_artifacts --parallel
+          cmake --build build --config Release --target package
+
       - name: Collect native release archives
+        shell: bash
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p upload/native-release
-          cp "dist/release/mynumber-cmake-${VERSION}/build/mynumber-${VERSION}-"*.tar.gz upload/native-release/
-          cp "dist/release/mynumber-cmake-${VERSION}/build/mynumber-${VERSION}-"*.zip upload/native-release/
+          cp dist/release/mynumber-cmake-"${VERSION}"/build/mynumber-"${VERSION}-"*.tar.gz upload/native-release/
+          cp dist/release/mynumber-cmake-"${VERSION}"/build/mynumber-"${VERSION}-"*.zip upload/native-release/
           ls -la upload/native-release/
 
       - name: Upload CPack artifact
@@ -86,8 +103,15 @@ jobs:
     name: Node addon (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+            release_platform: macos
+          - os: ubuntu-latest
+            release_platform: linux
+          - os: windows-latest
+            release_platform: windows
     steps:
       - uses: actions/checkout@v4
 
@@ -98,25 +122,49 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build and stage native addon
+      - name: Build and stage native addon (Unix)
+        if: runner.os != 'Windows'
         run: |
-          cmake -B build/native -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+          cmake -B build/native -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DMYNUMBER_BUILD_CLI=OFF
           cmake --build build/native --target mynumber_static --parallel
-          mkdir -p native-lib
-          cp build/native/libmynumber.a native-lib/libmynumber.a
+          node scripts/copy-native-static-lib.js build/native
           make dist-node
           npm run stage:npm:native
 
-      - name: Package node release archives
+      - name: Build and stage native addon (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -B build/native -DMYNUMBER_BUILD_CLI=OFF
+          cmake --build build/native --config Release --target mynumber_static --parallel
+          node scripts/copy-native-static-lib.js build/native
+          node scripts/build-dist-node.js
+          npm run stage:npm:native
+
+      - name: Package node release archives (Unix)
+        if: runner.os != 'Windows'
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          PLATFORM="${{ matrix.os == 'macos-latest' && 'macos' || 'linux' }}"
+          PLATFORM="${{ matrix.release_platform }}"
           mkdir -p upload/node-release
           BASENAME="mynumber-node-${VERSION}-${PLATFORM}"
           cd dist/node
           zip -j "../../upload/node-release/${BASENAME}.zip" mynumber.node index.d.ts
           tar -czf "../../upload/node-release/${BASENAME}.tar.gz" mynumber.node index.d.ts
           ls -la "../../upload/node-release/"
+
+      - name: Package node release archives (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $VERSION = $env:GITHUB_REF_NAME.Substring(1)
+          $PLATFORM = "${{ matrix.release_platform }}"
+          New-Item -ItemType Directory -Force -Path upload/node-release | Out-Null
+          $basename = "mynumber-node-$VERSION-$PLATFORM"
+          Set-Location dist/node
+          Compress-Archive -Path mynumber.node,index.d.ts -DestinationPath "../../upload/node-release/$basename.zip" -Force
+          tar -czf "../../upload/node-release/$basename.tar.gz" mynumber.node index.d.ts
+          Get-ChildItem "../../upload/node-release"
 
       - name: Upload node release archives
         uses: actions/upload-artifact@v4
@@ -127,6 +175,7 @@ jobs:
 
       - name: Remove staged npm build debris
         if: always()
+        shell: bash
         run: rm -rf dist/npm/mynumber/build dist/npm/mynumber/lib/binding
 
   build-wasm:
@@ -210,13 +259,12 @@ jobs:
       - name: Collect release assets
         run: |
           mkdir -p release-assets
-          find artifacts/source-release artifacts/native-macos-latest artifacts/native-ubuntu-latest \
-            artifacts/node-release-macos-latest artifacts/node-release-ubuntu-latest artifacts/wasm-release \
+          find artifacts/source-release artifacts/native-* artifacts/node-release-* artifacts/wasm-release \
             -type f \( -name '*.tar.gz' -o -name '*.zip' \) -exec cp {} release-assets/ \;
           echo "Release assets:"
           ls -la release-assets/
-          test "$(find release-assets -type f | wc -l)" -eq 12 || {
-            echo "Expected 12 release files (4 native, 2 cmake, 4 node, 2 wasm)" >&2
+          test "$(find release-assets -type f | wc -l)" -eq 16 || {
+            echo "Expected 16 release files (6 native, 2 cmake, 6 node, 2 wasm)" >&2
             exit 1
           }
 
