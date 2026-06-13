@@ -1,2 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
+file(READ "${CMAKE_CURRENT_LIST_DIR}/packaging/project.json" MYNUMBER_PROJECT_JSON)
+string(JSON MYNUMBER_PROJECT_VERSION GET ${MYNUMBER_PROJECT_JSON} version)
+project(mynumber VERSION ${MYNUMBER_PROJECT_VERSION})
 include(${CMAKE_CURRENT_LIST_DIR}/packaging/native-cmake/CMakeLists.txt)

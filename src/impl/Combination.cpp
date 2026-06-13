@@ -76,10 +76,10 @@ auto Combination::newStateContainer() {
 }
 
 std::vector<std::shared_ptr<StateValue>> Combination::allSolutions() const {
-  std::vector<std::unordered_map<int, std::vector<std::shared_ptr<StateValue>>>> states(1 << numbers.size());
+  std::vector<std::unordered_map<int, std::vector<std::shared_ptr<StateValue>>>> states(1ull << numbers.size());
 
   for (const auto &[i, v] : mynum::compat::views::enumerate(numbers)) {
-    states[1 << i][v].push_back(std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr));
+    states[1ull << i][v].push_back(std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr));
   }
 
   std::vector<std::shared_ptr<StateValue>> solutions;
@@ -128,10 +128,10 @@ std::vector<std::shared_ptr<StateValue>> Combination::allSolutions() const {
 }
 
 std::shared_ptr<StateValue> Combination::solve() const {
-  std::vector<std::unordered_map<int, std::shared_ptr<StateValue>>> states(1 << numbers.size());
+  std::vector<std::unordered_map<int, std::shared_ptr<StateValue>>> states(1ull << numbers.size());
 
   for (const auto &[i, v] : mynum::compat::views::enumerate(numbers)) {
-    states[1 << i][v] = std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr);
+    states[1ull << i][v] = std::make_shared<StateValue>(v, Operator::NONE, nullptr, nullptr);
   }
 
   auto best_diff = std::numeric_limits<unsigned int>::max();
