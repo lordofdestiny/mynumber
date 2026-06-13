@@ -22,6 +22,7 @@
     "url": "git+https://github.com/lordofdestiny/mynumber.git"
   },
   "scripts": {
+    "install": "node -e \"process.exit(0)\"",
     "build": "npm run build:node && npm run build:wasm",
     "build:native": "make native dist-native",
     "build:lib": "make native",
