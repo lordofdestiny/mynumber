@@ -1,8 +1,4 @@
-#if __has_include(<inplace_vector>)
-#include <inplace_vector>
-#else
 #include <vector>
-#endif
 #include <format>
 #include <iostream>
 #include <polyfill/generator.hpp>
@@ -65,16 +61,6 @@ Combination Combination::generate() {
   return {target, numbers};
 }
 
-auto Combination::newStateContainer() {
-#if defined(__cpp_lib_inplace_vector)
-  std::inplace_vector<std::shared_ptr<StateValue>, 6> new_states;
-#else
-  std::vector<std::shared_ptr<StateValue>> new_states;
-  new_states.reserve(6);
-#endif
-  return new_states;
-}
-
 std::vector<std::shared_ptr<StateValue>> Combination::allSolutions() const {
   std::vector<std::unordered_map<int, std::vector<std::shared_ptr<StateValue>>>> states(1ull << numbers.size());
 
@@ -96,7 +82,8 @@ std::vector<std::shared_ptr<StateValue>> Combination::allSolutions() const {
             mynum::compat::views::filter([](const auto &pair) { return std::get<0>(pair)->value < std::get<1>(pair)->value; });
 
         for (const auto &[state1, state2] : state_pairs) {
-          auto new_states = newStateContainer();
+          std::vector<std::shared_ptr<StateValue>> new_states;
+          new_states.reserve(6);
           new_states.push_back(StateValue::combine(state1, state2, Operator::ADD));
           new_states.push_back(StateValue::combine(state1, state2, Operator::MUL));
           new_states.push_back(StateValue::combine(state2, state1, Operator::SUB));
@@ -146,8 +133,8 @@ std::shared_ptr<StateValue> Combination::solve() const {
         auto val1 = state1->value;
         auto val2 = state2->value;
 
-        auto new_states = newStateContainer();
-
+        std::vector<std::shared_ptr<StateValue>> new_states;
+        new_states.reserve(6);
         new_states.push_back(StateValue::combine(state1, state2, Operator::ADD));
         new_states.push_back(StateValue::combine(state1, state2, Operator::MUL));
         if (val1 > val2) {

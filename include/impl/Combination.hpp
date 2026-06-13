@@ -19,9 +19,6 @@ struct Combination {
 
   EXPORT_API static Combination generate();
 
-private:
-  static auto newStateContainer();
-
 public:
   EXPORT_API std::vector<std::shared_ptr<StateValue>> allSolutions() const;
 
