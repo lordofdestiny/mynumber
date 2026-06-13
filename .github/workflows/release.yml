@@ -157,6 +157,9 @@ jobs:
         with:
           node-version: '20'
           registry-url: https://registry.npmjs.org
+          scope: '@lordofdestiny'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install dependencies
         run: npm ci
@@ -181,17 +184,11 @@ jobs:
 
       - name: Publish @lordofdestiny/mynumber
         run: npm publish dist/npm/mynumber --access public
-        with:
-          registry-url: https://registry.npmjs.org
-          scope: '@lordofdestiny'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @lordofdestiny/mynumber-wasm
         run: npm publish dist/npm/mynumber-wasm --access public
-        with:
-          registry-url: https://registry.npmjs.org
-          scope: '@lordofdestiny'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
