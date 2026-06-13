@@ -1,3 +1,16 @@
+export type MynumberImplementation = 'native' | 'js';
+
+/** Active backend: `native` (`.node` addon) or `js` (pure-JS fallback). */
+export const implementation: MynumberImplementation;
+
+export interface MynumberFeatures {
+  /** Enumerate all exact solutions (native addon only; exceptionally inefficient). */
+  allSolutions: boolean;
+}
+
+/** Feature flags for the active backend. */
+export const features: MynumberFeatures;
+
 export interface ICombination {
   target: number;
   numbers: [number, number, number, number, number, number];
@@ -19,7 +32,8 @@ export class Combination implements ICombination {
   static generate(): Combination;
 
   solve(): Solution;
-  allSolutions(): Solution[];
+  /** Available when `features.allSolutions` is `true`. */
+  allSolutions?(): Solution[];
   toString(): string;
   toJSON(): ICombination;
 }

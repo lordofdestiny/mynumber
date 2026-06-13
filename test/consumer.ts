@@ -1,4 +1,4 @@
-import { Combination, type ICombination } from 'mynumber';
+import { Combination, features, implementation, type ICombination } from 'mynumber';
 import { load, type MynumberModule } from 'mynumber/wasm';
 
 const numbers: [number, number, number, number, number, number] = [3, 3, 8, 8, 2, 2];
@@ -10,13 +10,17 @@ const fromConfig = new Combination(config);
 const generated = Combination.generate();
 
 generated.solve().expression();
-generated.allSolutions();
+if (features.allSolutions && implementation === 'native') {
+  generated.allSolutions?.();
+}
 comb.solve().value;
 fromConfig.toJSON();
 
 async function wasmSmoke(): Promise<void> {
-  const api: MynumberModule = await load();
-  const wasmComb = new api.Combination(24, numbers);
+  const mod: MynumberModule = await load();
+  const impl: typeof mod.implementation = mod.implementation;
+  if (impl !== 'wasm') throw new Error('expected wasm');
+  const wasmComb = new mod.Combination(24, numbers);
 
   try {
     const solution = wasmComb.solve();

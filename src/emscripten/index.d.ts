@@ -1,3 +1,16 @@
+export type MynumberImplementation = 'wasm';
+
+/** Active backend. */
+export const implementation: MynumberImplementation;
+
+export interface MynumberFeatures {
+  /** Enumerate all exact solutions (not available in WASM; exceptionally inefficient). */
+  allSolutions: boolean;
+}
+
+/** Feature flags for the WASM backend. */
+export const features: MynumberFeatures;
+
 export interface ICombination {
   target: number;
   numbers: number[];
@@ -27,6 +40,8 @@ export class Combination implements ICombination {
 export interface MynumberModule {
   Combination: typeof Combination;
   Solution: typeof Solution;
+  features: MynumberFeatures;
+  implementation: MynumberImplementation;
 }
 
 export function load(): Promise<MynumberModule>;

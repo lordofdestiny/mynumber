@@ -3,6 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 
+const FEATURES = { allSolutions: false };
+const IMPLEMENTATION = 'wasm';
+
 /** @type {Promise<import('./index').MynumberModule> | undefined} */
 let modulePromise;
 
@@ -33,9 +36,11 @@ async function load() {
     modulePromise = Promise.resolve({
       Combination: Module.Combination,
       Solution: Module.Solution,
+      features: FEATURES,
+      implementation: IMPLEMENTATION,
     });
   }
   return modulePromise;
 }
 
-module.exports = { load };
+module.exports = { load, features: FEATURES, implementation: IMPLEMENTATION };

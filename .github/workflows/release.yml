@@ -76,8 +76,9 @@ jobs:
 
       - name: Package node release archive
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p dist/release
-          ARCHIVE="mynumber-node-${{ matrix.os == 'macos-latest' && 'macos' || 'linux' }}.zip"
+          ARCHIVE="mynumber-node-${VERSION}-${{ matrix.os == 'macos-latest' && 'macos' || 'linux' }}.zip"
           cd dist/node
           zip -j "../release/${ARCHIVE}" mynumber.node index.d.ts
 
@@ -85,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-release-${{ matrix.os }}
-          path: dist/release/mynumber-node-${{ matrix.os == 'macos-latest' && 'macos' || 'linux' }}.zip
+          path: dist/release/mynumber-node-*.zip
 
       - name: Upload addon binary
         uses: actions/upload-artifact@v4
@@ -120,15 +121,16 @@ jobs:
 
       - name: Upload wasm release archive
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p dist/release
           cd dist/wasm
-          zip -j ../release/mynumber-wasm.zip mynumber.js mynumber.wasm index.d.ts
+          zip -j "../release/mynumber-wasm-${VERSION}.zip" mynumber.js mynumber.wasm index.d.ts
 
       - name: Upload wasm release artifact
         uses: actions/upload-artifact@v4
         with:
           name: wasm-release
-          path: dist/release/mynumber-wasm.zip
+          path: dist/release/mynumber-wasm-*.zip
 
   build-demo:
     name: Demo site
@@ -175,9 +177,9 @@ jobs:
             artifacts/native-ubuntu-latest/*
             artifacts/prebuild-macos-latest/*
             artifacts/prebuild-ubuntu-latest/*
-            artifacts/node-release-macos-latest/mynumber-node-macos.zip
-            artifacts/node-release-ubuntu-latest/mynumber-node-linux.zip
-            artifacts/wasm-release/mynumber-wasm.zip
+            artifacts/node-release-macos-latest/*.zip
+            artifacts/node-release-ubuntu-latest/*.zip
+            artifacts/wasm-release/*.zip
 
   publish-npm:
     name: Publish npm packages

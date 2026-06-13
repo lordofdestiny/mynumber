@@ -22,6 +22,8 @@ function resolveAddon() {
 
 const addon = require(resolveAddon());
 
+exports.features = { allSolutions: true };
+exports.implementation = 'native';
 exports.Combination = addon.Combination;
 if (addon.Solution !== undefined) {
   exports.Solution = addon.Solution;

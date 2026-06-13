@@ -97,7 +97,11 @@ describe('Combination', () => {
   describe('allSolutions', () => {
     it('returns only exact solutions', () => {
       const comb = new Combination(24, SMALL_NUMBERS);
-      const solutions = comb.allSolutions();
+      const allSolutions = comb.allSolutions;
+      if (!allSolutions) {
+        throw new Error('allSolutions requires native addon');
+      }
+      const solutions = allSolutions.call(comb);
 
       assert.ok(solutions.length > 0);
       for (const solution of solutions) {
@@ -108,7 +112,11 @@ describe('Combination', () => {
 
     it('includes a simple exact solution', () => {
       const comb = new Combination(24, SMALL_NUMBERS);
-      const expressions = comb.allSolutions().map((s) => s.expression());
+      const allSolutions = comb.allSolutions;
+      if (!allSolutions) {
+        throw new Error('allSolutions requires native addon');
+      }
+      const expressions = allSolutions.call(comb).map((s) => s.expression());
 
       assert.ok(expressions.includes('3 * 8'));
     });

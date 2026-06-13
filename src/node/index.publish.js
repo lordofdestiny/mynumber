@@ -99,20 +99,29 @@ function loadJsFallback() {
   return require(js);
 }
 
-/** @returns {{ Combination: unknown; Solution?: unknown }} */
+/** @returns {{ addon: { Combination: unknown; Solution?: unknown }; features: { allSolutions: boolean }; implementation: 'native' | 'js' }} */
 function resolveAddon() {
-  const loaders = [loadColocated, loadPrebuild, loadCompiled, loadJsFallback];
+  const nativeLoaders = [loadColocated, loadPrebuild, loadCompiled];
   const errors = [];
 
-  for (const load of loaders) {
+  for (const load of nativeLoaders) {
     try {
       const addon = load();
       if (addon?.Combination) {
-        return addon;
+        return { addon, features: { allSolutions: true }, implementation: 'native' };
       }
     } catch (err) {
       errors.push(/** @type {Error} */ (err));
     }
+  }
+
+  try {
+    const addon = loadJsFallback();
+    if (addon?.Combination) {
+      return { addon, features: { allSolutions: false }, implementation: 'js' };
+    }
+  } catch (err) {
+    errors.push(/** @type {Error} */ (err));
   }
 
   throw new Error(
@@ -120,8 +129,10 @@ function resolveAddon() {
   );
 }
 
-const addon = resolveAddon();
+const { addon, features, implementation } = resolveAddon();
 
+exports.features = features;
+exports.implementation = implementation;
 exports.Combination = addon.Combination;
 if (addon.Solution !== undefined) {
   exports.Solution = addon.Solution;
