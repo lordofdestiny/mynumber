@@ -130,6 +130,7 @@ dist-demo: dist-wasm
 
 # Staged npm publish packages (mynumber + mynumber-wasm)
 dist-npm: dist-node dist-wasm
+	node scripts/sync-version.mjs
 	node scripts/stage-npm-packages.mjs
 
 format: build/.format

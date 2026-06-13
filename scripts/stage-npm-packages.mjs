@@ -6,8 +6,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
+import { readProject, syncVersionToPackageJson } from './project-meta.mjs';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
+
+syncVersionToPackageJson();
 
 /** @param {string} src @param {string} dest */
 function copyFile(src, dest) {
@@ -52,8 +56,8 @@ function writePkg(dest, pkg) {
 }
 
 const rootPkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-const npmConfig = JSON.parse(fs.readFileSync(path.join(root, 'packaging/npm/config.json'), 'utf8'));
-const { owner, repo } = npmConfig.github;
+const project = readProject();
+const { owner, repo } = project.github;
 const nativeOnly = process.argv.includes('--native-only');
 
 const distNative = path.join(root, 'dist/npm/mynumber');
@@ -70,31 +74,28 @@ copyFile(path.join(root, 'src/node/index.publish.js'), path.join(distNative, 'in
 copyFile(path.join(root, 'src/node/index.d.ts'), path.join(distNative, 'index.d.ts'));
 copyFile(path.join(root, 'binding.gyp'), path.join(distNative, 'binding.gyp'));
 copyFile(path.join(root, 'CMakeLists.txt'), path.join(distNative, 'CMakeLists.txt'));
-copyFile(path.join(root, 'Makefile'), path.join(distNative, 'Makefile'));
 copyDir(path.join(root, 'include'), path.join(distNative, 'include'));
 copyDir(path.join(root, 'src/impl'), path.join(distNative, 'src/impl'));
 copyDir(path.join(root, 'src/wrapper'), path.join(distNative, 'src/wrapper'));
+copyFile(path.join(root, 'scripts/install.js'), path.join(distNative, 'scripts/install.js'));
+copyFile(path.join(root, 'scripts/install-binding.js'), path.join(distNative, 'scripts/install-binding.js'));
 copyFile(path.join(root, 'scripts/install-build-lib.js'), path.join(distNative, 'scripts/install-build-lib.js'));
 copyFile(path.join(root, 'scripts/install-copy-binding.js'), path.join(distNative, 'scripts/install-copy-binding.js'));
+copyFile(path.join(root, 'scripts/install-cleanup.js'), path.join(distNative, 'scripts/install-cleanup.js'));
 
-execSync('npm run build:js-fallback', { cwd: root, stdio: 'inherit' });
-const jsFallbackOut = path.join(root, 'build/js-fallback');
-if (!fs.existsSync(path.join(jsFallbackOut, 'index.js'))) {
-  console.error('build/js-fallback/index.js not found. Run: npm run build:js-fallback');
+execSync('npm run build:js-fallback:publish', { cwd: root, stdio: 'inherit' });
+const jsFallbackOut = path.join(root, 'build/js-fallback-publish/index.js');
+if (!fs.existsSync(jsFallbackOut)) {
+  console.error('build/js-fallback-publish/index.js not found. Run: npm run build:js-fallback:publish');
   process.exit(1);
 }
 
 fs.mkdirSync(path.join(distNative, 'lib/binding'), { recursive: true });
-copyDir(jsFallbackOut, path.join(distNative, 'lib/js'));
-
-const stagedNode = path.join(root, 'dist/node/mynumber.node');
-if (fs.existsSync(stagedNode)) {
-  copyFile(stagedNode, path.join(distNative, 'mynumber.node'));
-}
+copyFile(jsFallbackOut, path.join(distNative, 'lib/js/index.js'));
 
 writePkg(path.join(distNative, 'package.json'), {
   ...nativeTemplate,
-  version: rootPkg.version,
+  version: project.version,
   author: rootPkg.author,
   license: rootPkg.license,
   repository: rootPkg.repository ?? {
@@ -124,7 +125,7 @@ if (!nativeOnly) {
 
   writePkg(path.join(distWasm, 'package.json'), {
     ...wasmTemplate,
-    version: rootPkg.version,
+    version: project.version,
     author: rootPkg.author,
     license: rootPkg.license,
     repository: rootPkg.repository ?? {

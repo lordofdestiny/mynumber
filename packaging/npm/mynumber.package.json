@@ -18,16 +18,17 @@
     "include",
     "src",
     "CMakeLists.txt",
-    "Makefile",
     "scripts",
     "lib"
   ],
   "scripts": {
-    "install": "node scripts/install-build-lib.js && node-pre-gyp install --fallback-to-build && node scripts/install-copy-binding.js"
+    "install": "node scripts/install.js"
   },
   "gypfile": true,
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^2.0.0",
+    "@mapbox/node-pre-gyp": "^2.0.0"
+  },
+  "optionalDependencies": {
     "node-addon-api": "^8.8.0",
     "node-gyp": "^12.4.0"
   },

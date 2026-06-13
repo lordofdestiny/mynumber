@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(mynumber VERSION 1.0.0 LANGUAGES CXX)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/packaging/project.json" MYNUMBER_PROJECT_JSON)
+string(JSON MYNUMBER_PROJECT_VERSION GET ${MYNUMBER_PROJECT_JSON} version)
+
+project(mynumber VERSION ${MYNUMBER_PROJECT_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -59,5 +62,8 @@ set(CPACK_PACKAGE_NAME mynumber)
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Number combination puzzle solver C++ library")
 set(CPACK_PACKAGE_VENDOR "lordofdestiny")
-set(CPACK_GENERATOR TGZ ZIP)
+set(CPACK_GENERATOR "TGZ;ZIP")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
+# Binary packages only: .tar.gz + .zip (no legacy .tar.Z or self-extracting .sh)
+set(CPACK_BINARY_TZ OFF CACHE BOOL "Disable compress(.Z) packages" FORCE)
+set(CPACK_BINARY_STGZ OFF CACHE BOOL "Disable self-extracting .sh packages" FORCE)

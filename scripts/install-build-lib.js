@@ -52,3 +52,5 @@ fs.copyFileSync(builtLib, libPath);
 if (!fs.existsSync(libPath)) {
   throw new Error(`install-build-lib: expected static library at ${libPath}`);
 }
+
+fs.rmSync(cmakeBuildDir, { recursive: true, force: true });

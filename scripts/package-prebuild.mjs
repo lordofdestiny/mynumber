@@ -9,10 +9,10 @@ import { execSync } from 'node:child_process';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const pkgDir = path.join(root, 'dist/npm/mynumber');
-const addon = path.join(pkgDir, 'mynumber.node');
+const addon = path.join(root, 'dist/node/mynumber.node');
 
 if (!fs.existsSync(addon)) {
-  console.error('dist/npm/mynumber/mynumber.node not found. Run: npm run stage:npm:native');
+  console.error('dist/node/mynumber.node not found. Run: make dist-node');
   process.exit(1);
 }
 
