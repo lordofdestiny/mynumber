@@ -38,6 +38,8 @@
     "stage:npm": "node scripts/stage-npm-packages.mjs",
     "stage:npm:native": "node scripts/stage-npm-packages.mjs --native-only",
     "package:prebuild": "node scripts/package-prebuild.mjs",
+    "package:source": "node scripts/package-source.mjs",
+    "test:release": "bash scripts/test-release-pipeline.sh",
     "lint:packages": "publint dist/npm/mynumber && publint dist/npm/mynumber-wasm",
     "demo": "npm run build:demo && npx --yes serve dist/demo -l 8080",
     "clean": "make clean",
