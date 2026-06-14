@@ -15,14 +15,14 @@ struct Combination {
   int target{};
   std::array<int, 6> numbers{};
 
-  EXPORT_API friend std::ostream &operator<<(std::ostream &os, const Combination &comb);
+  friend std::ostream &operator<<(std::ostream &os, const Combination &comb);
 
-  EXPORT_API static Combination generate();
+  static Combination generate();
 
 public:
-  EXPORT_API std::vector<std::shared_ptr<StateValue>> allSolutions() const;
+  std::vector<std::shared_ptr<StateValue>> allSolutions() const;
 
-  EXPORT_API std::shared_ptr<StateValue> solve() const;
+  std::shared_ptr<StateValue> solve() const;
 };
 
 } // namespace mynum::impl

@@ -3,26 +3,38 @@ CXXFLAGS := -std=c++20 -O3 -g -Wall -Wextra -Werror
 JOBS ?= $(shell sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
 CMAKE_BUILD_TYPE ?= Release
 CMAKE_BUILD_DIR := build/native
+
+ifeq ($(OS),Windows_NT)
+CMAKE_ARGS :=
+CMAKE_BUILD_ARGS := --config Release
+else
 CMAKE_ARGS := -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE)
+CMAKE_BUILD_ARGS :=
+endif
 
 ifndef MAKELEVEL
   MAKEFLAGS += --output-sync=line -j$(JOBS)
 endif
 
-UNAME_S := $(shell uname -s)
+UNAME_S := $(shell uname -s || "")
 ifeq ($(UNAME_S),Darwin)
   LIB_EXT := dylib
+  SLIB_EXT := a
+elifeq($(OS),Windows_NT)
+  LIB_EXT := dll
+  SLIB_EXT := lib
 else
   LIB_EXT := so
+  SLIB_EXT := a
 endif
 
 IMPL_SRCS := $(wildcard src/impl/*.cpp)
 WRAPPER_SRCS := $(wildcard src/wrapper/*.cpp)
 INC_FILES := $(wildcard include/**/*.hpp)
 
-LIB_STATIC := $(CMAKE_BUILD_DIR)/libmynumber.a
+LIB_STATIC := $(CMAKE_BUILD_DIR)/libmynumber.$(SLIB_EXT)
 LIB_SHARED := $(CMAKE_BUILD_DIR)/libmynumber.$(LIB_EXT)
-NATIVE_LIB := native-lib/libmynumber.a
+NATIVE_LIB := native-lib/libmynumber.$(SLIB_EXT)
 MAIN_BIN := $(CMAKE_BUILD_DIR)/mynumber
 CONFIGURED := build/Release/.configured
 ADDON_BIN := build/Release/mynumber.node
@@ -37,7 +49,7 @@ DIST_NODE_DIR := dist/node
 DIST_DEMO_DIR := dist/demo
 DIST_NATIVE_DIR := dist/native
 
-EMXXFLAGS := -std=c++20 -O3 -Wall -Wextra -Werror -Iinclude
+EMXXFLAGS := -std=c++20 -O3 -Wall -Wextra -Werror -Iinclude -Isrc
 EMLDFLAGS := --bind -sMODULARIZE=1 -sEXPORT_NAME=createMynumberModule -sALLOW_MEMORY_GROWTH=1 \
 	-sFILESYSTEM=0 -sENVIRONMENT=web,node
 
@@ -52,21 +64,21 @@ lib: $(LIB_STATIC) $(LIB_SHARED)
 
 $(LIB_STATIC): CMakeLists.txt $(IMPL_SRCS) $(INC_FILES)
 	cmake -B $(CMAKE_BUILD_DIR) $(CMAKE_ARGS)
-	cmake --build $(CMAKE_BUILD_DIR) --target mynumber_static --parallel $(JOBS)
+	cmake --build $(CMAKE_BUILD_DIR) $(CMAKE_BUILD_ARGS) --target mynumber_static --parallel $(JOBS)
 
 $(LIB_SHARED): $(LIB_STATIC)
-	cmake --build $(CMAKE_BUILD_DIR) --target mynumber_shared --parallel $(JOBS)
+	cmake --build $(CMAKE_BUILD_DIR) $(CMAKE_BUILD_ARGS) --target mynumber_shared --parallel $(JOBS)
 
 dist-native: native
 	@mkdir -p $(DIST_NATIVE_DIR)
-	cmake --build $(CMAKE_BUILD_DIR) --target package
+	cmake --build $(CMAKE_BUILD_DIR) $(CMAKE_BUILD_ARGS) --target package
 	cp $(CMAKE_BUILD_DIR)/mynumber-*.tar.gz $(DIST_NATIVE_DIR)/ 2>/dev/null || true
 
 # Native console application
 main: $(MAIN_BIN)
 
 $(MAIN_BIN): $(LIB_STATIC) src/main.cpp
-	cmake --build $(CMAKE_BUILD_DIR) --target mynumber_cli
+	cmake --build $(CMAKE_BUILD_DIR) $(CMAKE_BUILD_ARGS) --target mynumber_cli
 
 # Node.js native addon
 addon: dist-node
@@ -80,20 +92,17 @@ dist-node: $(ADDON_BIN)
 
 $(CONFIGURED): binding.gyp $(LIB_STATIC)
 	@mkdir -p native-lib
-	@test -f $(LIB_STATIC) || (echo "missing $(LIB_STATIC); run make lib first" >&2; exit 1)
 	@node scripts/copy-native-static-lib.js $(CMAKE_BUILD_DIR)
 	@npx node-gyp configure
 	@mkdir -p $(@D)
-	@touch $@
+	@touch $@ || ni $@
 
 $(NATIVE_LIB): $(LIB_STATIC)
 	@mkdir -p native-lib
-	@test -f $(LIB_STATIC) || (echo "missing $(LIB_STATIC); run make lib first" >&2; exit 1)
 	@node scripts/copy-native-static-lib.js $(CMAKE_BUILD_DIR)
 
 $(ADDON_BIN): $(CONFIGURED) $(LIB_STATIC) $(WRAPPER_SRCS) $(INC_FILES)
 	@mkdir -p native-lib
-	@test -f $(LIB_STATIC) || (echo "missing $(LIB_STATIC); run make lib first" >&2; exit 1)
 	@node scripts/copy-native-static-lib.js $(CMAKE_BUILD_DIR)
 	@npx node-gyp build -j $(JOBS)
 

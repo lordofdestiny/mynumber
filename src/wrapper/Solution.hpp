@@ -1,7 +1,7 @@
-#ifndef __STATE_VALUE_WRAPPER__
-#define __STATE_VALUE_WRAPPER__
+#ifndef __SOLUTION_WRAPPER__
+#define __SOLUTION_WRAPPER__
 
-#include <impl/StateValue.hpp>
+#include <mynumber/Solution.hpp>
 
 #include <napi.h>
 
@@ -10,7 +10,7 @@ public:
   static void Init(Napi::Env env);
   Solution(const Napi::CallbackInfo &info);
 
-  static Napi::Object CreateNew(Napi::Env env, std::shared_ptr<mynum::impl::StateValue> state);
+  static Napi::Object CreateNew(Napi::Env env, mynum::Solution state);
 
 private:
   Napi::Value GetValue(const Napi::CallbackInfo &info);
@@ -22,7 +22,7 @@ private:
 
   static Napi::FunctionReference constructor;
 
-  std::shared_ptr<mynum::impl::StateValue> state_;
+  mynum::Solution state_;
 };
 
 #endif

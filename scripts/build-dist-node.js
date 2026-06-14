@@ -12,6 +12,7 @@ const root = path.join(__dirname, '..');
 const distNodeDir = path.join(root, 'dist/node');
 const addonBin = path.join(root, 'build/Release/mynumber.node');
 const jobs = Math.max(1, Number(process.env.JOBS) || require('node:os').cpus().length || 4);
+const nodeGyp = path.join(root, 'node_modules', 'node-gyp', 'bin', 'node-gyp.js');
 
 /** @param {string} command @param {string[]} args */
 function run(command, args) {
@@ -37,8 +38,8 @@ run('cmake', [
   String(jobs),
 ]);
 run('node', ['scripts/copy-native-static-lib.js', 'build/native']);
-run('npx', ['node-gyp', 'configure']);
-run('npx', ['node-gyp', 'build', '-j', String(jobs)]);
+run('node', [nodeGyp, 'configure']);
+run('node', [nodeGyp, 'build', '-j', String(jobs)]);
 
 if (!fs.existsSync(addonBin)) {
   throw new Error(`build-dist-node: expected addon at ${addonBin}`);

@@ -1,5 +1,5 @@
-#include <wrapper/Combination.hpp>
-#include <wrapper/Solution.hpp>
+#include "Combination.hpp"
+#include "Solution.hpp"
 
 Napi::FunctionReference Combination::constructor;
 
@@ -36,20 +36,22 @@ Combination::Combination(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Comb
     Napi::Object config = info[0].As<Napi::Object>();
 
     if (config.Has("target") && config.Get("target").IsNumber()) {
-      this->comb_.target = config.Get("target").As<Napi::Number>().Int32Value();
+      this->comb_.setTarget(config.Get("target").As<Napi::Number>().Int32Value());
     } else {
       Napi::TypeError::New(env, "Invalid arguments.").ThrowAsJavaScriptException();
     }
 
+    std::array<int, 6> numbers{};
     if (config.Has("numbers") && config.Get("numbers").IsArray()) {
       Napi::Array jsArray = config.Get("numbers").As<Napi::Array>();
-
-      for (uint32_t i = 0; i < jsArray.Length(); i++) {
+      uint32_t len = jsArray.Length() > 6 ? 6 : jsArray.Length();
+      for (uint32_t i = 0; i < len; i++) {
         Napi::Value element = jsArray.Get(i);
         if (element.IsNumber()) {
-          this->comb_.numbers[i] = element.As<Napi::Number>().Int32Value();
+          numbers[i] = element.As<Napi::Number>().Int32Value();
         }
       }
+      this->comb_.setNumbers(numbers);
     } else {
       Napi::TypeError::New(env, "Invalid arguments.").ThrowAsJavaScriptException();
     }
@@ -63,12 +65,14 @@ Combination::Combination(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Comb
       return;
     }
 
-    this->comb_.target = info[0].As<Napi::Number>().Int32Value();
+    this->comb_.setTarget(info[0].As<Napi::Number>().Int32Value());
     Napi::Array arr = info[1].As<Napi::Array>();
+    std::array<int, 6> numbers{};
     uint32_t len = arr.Length() > 6 ? 6 : arr.Length();
     for (uint32_t i = 0; i < len; ++i) {
-      this->comb_.numbers[i] = arr.Get(i).As<Napi::Number>().Int32Value();
+      numbers[i] = arr.Get(i).As<Napi::Number>().Int32Value();
     }
+    this->comb_.setNumbers(numbers);
     return;
   }
 
@@ -101,10 +105,10 @@ Napi::Value Combination::CustomInspect(const Napi::CallbackInfo &info) {
 
   // You can format this however you want the console to display it
   std::string consoleOutput = "Combination [ target: ";
-  consoleOutput += std::to_string(comb_.target);
+  consoleOutput += std::to_string(comb_.target());
   consoleOutput += ", numbers: [";
   auto i = 0;
-  for (auto &num : comb_.numbers) {
+  for (auto num : comb_.numbers()) {
     consoleOutput += std::to_string(num);
     if (i != 5) {
       consoleOutput += ", ";
@@ -118,16 +122,17 @@ Napi::Value Combination::CustomInspect(const Napi::CallbackInfo &info) {
 
 // Getters & Setters
 Napi::Value Combination::GetTarget(const Napi::CallbackInfo &info) {
-  return Napi::Number::New(info.Env(), this->comb_.target);
+  return Napi::Number::New(info.Env(), this->comb_.target());
 }
 void Combination::SetTarget(const Napi::CallbackInfo &info, const Napi::Value &value) {
-  this->comb_.target = value.As<Napi::Number>().Int32Value();
+  this->comb_.setTarget(value.As<Napi::Number>().Int32Value());
 }
 Napi::Value Combination::GetNumbers(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   Napi::Array arr = Napi::Array::New(env, 6);
+  auto numbers = this->comb_.numbers();
   for (size_t i = 0; i < 6; ++i) {
-    arr.Set(i, Napi::Number::New(env, this->comb_.numbers[i]));
+    arr.Set(i, Napi::Number::New(env, numbers[i]));
   }
   return arr;
 }
@@ -137,11 +142,13 @@ void Combination::SetNumbers(const Napi::CallbackInfo &info, const Napi::Value &
     Napi::TypeError::New(env, "Array expected").ThrowAsJavaScriptException();
     return;
   }
+  std::array<int, 6> numbers{};
   Napi::Array arr = value.As<Napi::Array>();
   uint32_t len = arr.Length() > 6 ? 6 : arr.Length();
   for (uint32_t i = 0; i < len; ++i) {
-    this->comb_.numbers[i] = arr.Get(i).As<Napi::Number>().Int32Value();
+    numbers[i] = arr.Get(i).As<Napi::Number>().Int32Value();
   }
+  this->comb_.setNumbers(numbers);
 }
 
 // 1. Implementation for console.log() / String(obj) format
@@ -150,9 +157,9 @@ Napi::Value Combination::ToString(const Napi::CallbackInfo &info) {
 
   // Format your native C++ data properties into a readable string
   std::string buffer = "Combination { target: ";
-  buffer += std::to_string(comb_.target) + ", ";
+  buffer += std::to_string(comb_.target()) + ", ";
   buffer += "numbers : ";
-  buffer += convertToString(comb_.numbers);
+  buffer += convertToString(comb_.numbers());
   buffer += " }";
 
   return Napi::String::New(env, buffer);
@@ -166,25 +173,25 @@ Napi::Value Combination::ToJSON(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
   Napi::Object jsonRepresentation = Napi::Object::New(env);
-  jsonRepresentation.Set("target", Napi::Number::New(env, this->comb_.target));
-  jsonRepresentation.Set("numbers", convertArray(env, this->comb_.numbers));
+  jsonRepresentation.Set("target", Napi::Number::New(env, this->comb_.target()));
+  jsonRepresentation.Set("numbers", convertArray(env, this->comb_.numbers()));
 
   return jsonRepresentation;
 }
 
 // Instance Logic mapping
 Napi::Value Combination::Solve(const Napi::CallbackInfo &info) {
-  std::shared_ptr<mynum::impl::StateValue> result = this->comb_.solve();
-  return Solution::CreateNew(info.Env(), result);
+  mynum::Solution result = this->comb_.solve();
+  return Solution::CreateNew(info.Env(), std::move(result));
 }
 
 Napi::Value Combination::AllSolutions(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  std::vector<std::shared_ptr<mynum::impl::StateValue>> solutions = this->comb_.allSolutions();
+  std::vector<mynum::Solution> solutions = this->comb_.allSolutions();
 
   Napi::Array arr = Napi::Array::New(env, solutions.size());
   for (size_t i = 0; i < solutions.size(); ++i) {
-    arr.Set(i, Solution::CreateNew(env, solutions[i]));
+    arr.Set(i, Solution::CreateNew(env, std::move(solutions[i])));
   }
   return arr;
 }
@@ -192,7 +199,7 @@ Napi::Value Combination::AllSolutions(const Napi::CallbackInfo &info) {
 Napi::Value Combination::Generate(const Napi::CallbackInfo &info) {
   Napi::Object jsInstance = constructor.New({});
   Combination *c_instance = Combination::Unwrap(jsInstance);
-  c_instance->comb_ = mynum::impl::Combination::generate();
+  c_instance->comb_ = mynum::Combination::generate();
 
   // 4. Return the fully seeded object
   return jsInstance;

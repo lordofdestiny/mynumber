@@ -1,7 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { Combination } = require('..');
+const { Combination } = require('../build/Release/obj/mynumber/mynumber.node');
 const { evalExpression } = require('./helpers');
 
 /** @type {[number, number, number, number, number, number]} */

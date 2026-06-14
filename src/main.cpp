@@ -8,9 +8,10 @@
 #include <thread>
 #include <version>
 
-#include <impl/Combination.hpp>
+#include <mynumber/Combination.hpp>
+#include <mynumber/Solution.hpp>
 
-using namespace mynum::impl;
+using namespace mynum;
 
 static std::atomic<int> completedTasks = 0;
 
@@ -26,8 +27,12 @@ static std::mutex cout_mutex;
 struct TaskResult {
   int count;
   Combination comb;
-  std::shared_ptr<StateValue> value;
+  Solution solution;
   std::map<int, size_t> counters;
+
+  // Custom move constructor to handle move-only types
+  TaskResult(int c, Combination &&cm, Solution &&sol, std::map<int, size_t> cnt)
+      : count(c), comb(std::move(cm)), solution(std::move(sol)), counters(std::move(cnt)) {}
 };
 
 TaskResult futureTask(int tasks, int totalTasks) {
@@ -37,9 +42,9 @@ TaskResult futureTask(int tasks, int totalTasks) {
   #endif
 
   auto local_max_diff = std::numeric_limits<unsigned int>::min();
-  std::shared_ptr<StateValue> local_best = nullptr;
+  Solution local_best;
   std::map<int, size_t> per_diff_counters;
-  Combination best_comb{};
+  Combination best_comb;
 
   const int progressLimit = totalTasks / 100;
 
@@ -47,14 +52,14 @@ TaskResult futureTask(int tasks, int totalTasks) {
     auto cmb = Combination::generate();
     auto res = cmb.solve();
 
-    int signed_diff = cmb.target - res->value;
+    int signed_diff = cmb.target() - res.value();
     per_diff_counters[signed_diff]++;
 
     unsigned int diff = std::abs(signed_diff);
     if (diff >= local_max_diff) {
       local_max_diff = diff;
-      local_best = res;
-      best_comb = cmb;
+      local_best = std::move(res);
+      best_comb = std::move(cmb);
     }
 
     int current = ++completedTasks;
@@ -68,7 +73,7 @@ TaskResult futureTask(int tasks, int totalTasks) {
     }
   }
 
-  return {tasks, best_comb, local_best, per_diff_counters};
+  return {tasks, std::move(best_comb), std::move(local_best), per_diff_counters};
 }
 
 void benchmarkQuality(int n) {
@@ -95,22 +100,23 @@ void benchmarkQuality(int n) {
   }
 
   auto global_best_diff = std::numeric_limits<unsigned int>::min();
-  std::shared_ptr<StateValue> best_state = nullptr;
+  Solution best_state;
   Combination best_comb;
   std::map<int, size_t> total_diff_counters;
 
   for (auto &f : futures) {
-    auto const &[tasks, comb, state, counters] = f.get();
+    auto res = f.get();
+    const auto &counters = res.counters;
 
     for (const auto &[diff, count] : counters) {
       total_diff_counters[diff] += count;
     }
 
-    unsigned int diff = std::abs(comb.target - state->value);
+    unsigned int diff = std::abs(res.comb.target() - res.solution.value());
     if (diff >= global_best_diff) {
       global_best_diff = diff;
-      best_state = state;
-      best_comb = comb;
+      best_state = std::move(res.solution);
+      best_comb = std::move(res.comb);
     }
   }
 
@@ -119,26 +125,23 @@ void benchmarkQuality(int n) {
     std::cout << std::setw(5) << diff << " -> " << std::setw(10) << count << std::endl;
   }
   std::cout << std::string(50, '-') << std::endl;
-  std::cout << "Maximum deviation:" << global_best_diff << std::endl;
-  std::cout << "Expected: " << best_comb << std::endl;
-  std::cout << std::format("Found: {} = {}", best_state->reconstruct(), best_state->value) << std::endl;
+  std::cout << "Maximum deviation: " << global_best_diff << std::endl;
+  const auto numbers = best_comb.numbers();
+  std::cout << std::format("Target: {} (Numbers: {} {} {} {} {} {})", best_comb.target(), 
+                           numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], numbers[5]) << std::endl;
+  std::cout << std::format("Found: {} = {}", best_state.expression(), best_state.value()) << std::endl;
 }
 
-template <bool all> void playGame() {
+void playGameSolo() {
   auto comb = Combination::generate();
-  std::cout << "Target: " << comb.target << std::endl;
-  std::cout << std::format("Numbers: {} {} {} {}\t{}\t{}", comb.numbers[0], comb.numbers[1], comb.numbers[2],
-                           comb.numbers[3], comb.numbers[4], comb.numbers[5])
+  const auto numbers = comb.numbers();
+  std::cout << "Target: " << comb.target() << std::endl;
+  std::cout << std::format("Numbers: {} {} {} {}\t{}\t{}", numbers[0], numbers[1], numbers[2],
+                           numbers[3], numbers[4], numbers[5])
             << std::endl;
 
   auto future = std::async(std::launch::async, [&] {
-    if constexpr (all) {
-      auto sols = comb.allSolutions();
-      return sols;
-    } else {
-      auto sol = comb.solve();
-      return sol;
-    }
+    return comb.solve();
   });
 
   using namespace std::chrono_literals;
@@ -152,17 +155,43 @@ template <bool all> void playGame() {
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   [[maybe_unused]] auto block = std::cin.get();
 
-  if constexpr (all) {
-    if (solution.size() == 0) {
-      std::cout << "No exact solutions: " << std::endl;
-      return;
-    }
-    std::cout << "Solution count: " << solution.size() << std::endl;
-    for (auto sol : solution) {
-      std::cout << std::format("{} = {}", sol->reconstruct(), sol->value) << std::endl;
-    }
+  if (solution.valid()) {
+    std::cout << std::format("Computer solution: {} = {}", solution.expression(), solution.value()) << std::endl;
   } else {
-    std::cout << std::format("Computer solution: {} = {}", solution->reconstruct(), solution->value) << std::endl;
+    std::cout << "No solution found." << std::endl;
+  }
+}
+
+void playGameAll() {
+  auto comb = Combination::generate();
+  const auto numbers = comb.numbers();
+  std::cout << "Target: " << comb.target() << std::endl;
+  std::cout << std::format("Numbers: {} {} {} {}\t{}\t{}", numbers[0], numbers[1], numbers[2],
+                           numbers[3], numbers[4], numbers[5])
+            << std::endl;
+
+  auto future = std::async(std::launch::async, [&] {
+    return comb.allSolutions();
+  });
+
+  using namespace std::chrono_literals;
+  std::cout << "Starting timer..." << std::endl;
+  std::this_thread::sleep_for(10s);
+  std::cout << "Time expired..." << std::endl;
+
+  auto solutions = future.get();
+
+  std::cout << "Press enter to see solutions..." << std::endl;
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  [[maybe_unused]] auto block = std::cin.get();
+
+  if (solutions.empty()) {
+    std::cout << "No exact solutions found." << std::endl;
+  } else {
+    std::cout << "Solution count: " << solutions.size() << std::endl;
+    for (auto &sol : solutions) {
+      std::cout << std::format("{} = {}", sol.expression(), sol.value()) << std::endl;
+    }
   }
 }
 
@@ -188,7 +217,7 @@ int main(int argc, char **argv) {
     benchmarkQuality(N);
   } else if (std::string_view(argv[1]) == "play") {
     if (argc == 2) {
-      playGame<false>();
+      playGameSolo();
       return 0;
     }
     if (argc > 3) {
@@ -196,15 +225,15 @@ int main(int argc, char **argv) {
       return 2;
     }
     if (std::string_view(argv[2]) == "all") {
-      playGame<true>();
+      playGameAll();
     } else if (std::string_view(argv[2]) == "solo") {
-      playGame<false>();
+      playGameSolo();
     } else {
       std::cerr << "Unknown play mode" << std::endl;
       return 3;
     }
   } else {
-    std::cerr << "Unknown subcomand" << std::endl;
+    std::cerr << "Unknown subcommand" << std::endl;
     return 6;
   }
 }

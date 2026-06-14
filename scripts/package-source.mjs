@@ -42,10 +42,10 @@ fs.mkdirSync(stageDir, { recursive: true });
 copyFile(path.join(root, 'packaging/native-cmake/CMakeLists.txt'), path.join(stageDir, 'CMakeLists.txt'));
 copyDir(path.join(root, 'packaging/native-cmake/cmake'), path.join(stageDir, 'cmake'));
 copyFile(path.join(root, 'packaging/project.json'), path.join(stageDir, 'packaging/project.json'));
-copyFile(path.join(root, 'include/mynumber.hpp'), path.join(stageDir, 'include/mynumber.hpp'));
-copyDir(path.join(root, 'include/impl'), path.join(stageDir, 'include/impl'));
-copyDir(path.join(root, 'include/polyfill'), path.join(stageDir, 'include/polyfill'));
-copyDir(path.join(root, 'src/impl'), path.join(stageDir, 'src/impl'));
+copyDir(path.join(root, 'include'), path.join(stageDir, 'include'));
+copyDir(path.join(root, 'src/polyfill'), path.join(stageDir, 'src/polyfill'));
+copyDir(path.join(root, 'src/impl'), path.join(stageDir, 'src/impl')); 
+copyDir(path.join(root, 'src/api'), path.join(stageDir, 'src/api')); 
 copyFile(path.join(root, 'src/main.cpp'), path.join(stageDir, 'src/main.cpp'));
 
 fs.mkdirSync(outDir, { recursive: true });

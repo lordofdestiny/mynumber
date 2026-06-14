@@ -15,7 +15,7 @@ struct StateValue {
   std::shared_ptr<StateValue> left;
   std::shared_ptr<StateValue> right;
 
-  EXPORT_API std::string reconstruct() const;
+  std::string reconstruct() const;
 
   static std::shared_ptr<StateValue> combine(const std::shared_ptr<StateValue> &left,
                                              const std::shared_ptr<StateValue> &right, Operator op);

@@ -25,6 +25,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
+if(MSVC)
+  if(NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded" CACHE STRING "MSVC runtime library" FORCE)
+  endif()
+endif()
+
 if(APPLE)
   set(CMAKE_MACOSX_RPATH ON)
 endif()
@@ -32,14 +38,16 @@ endif()
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-set(MYNUMBER_IMPL_SOURCES
+set(MYNUMBER_SOURCES
   ${MYNUMBER_ROOT}/src/impl/Combination.cpp
   ${MYNUMBER_ROOT}/src/impl/Operator.cpp
   ${MYNUMBER_ROOT}/src/impl/StateValue.cpp
+  ${MYNUMBER_ROOT}/src/api/Combination.cpp
+  ${MYNUMBER_ROOT}/src/api/Solution.cpp
 )
 
-add_library(mynumber_static STATIC ${MYNUMBER_IMPL_SOURCES})
-add_library(mynumber_shared SHARED ${MYNUMBER_IMPL_SOURCES})
+add_library(mynumber_static STATIC ${MYNUMBER_SOURCES})
+add_library(mynumber_shared SHARED ${MYNUMBER_SOURCES})
 
 if(MSVC)
   set(MYNUMBER_COMPILE_OPTIONS /W4 /WX)
@@ -52,13 +60,13 @@ endif()
 target_compile_options(mynumber_static PRIVATE ${MYNUMBER_COMPILE_OPTIONS} $<$<CONFIG:Release>:${MYNUMBER_RELEASE_COMPILE_OPTIONS}>)
 target_compile_options(mynumber_shared PRIVATE ${MYNUMBER_COMPILE_OPTIONS} $<$<CONFIG:Release>:${MYNUMBER_RELEASE_COMPILE_OPTIONS}>)
 
-set(MYNUMBER_EXPORT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/impl/Export.hpp")
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include/impl")
+set(MYNUMBER_EXPORT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/mynumber/Export.hpp")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include/mynumber")
 
 generate_export_header(mynumber_shared
   EXPORT_MACRO_NAME EXPORT_API
   STATIC_DEFINE MYNUMBER_BUILT_AS_STATIC
-  EXPORT_FILE_NAME include/impl/Export.hpp
+  EXPORT_FILE_NAME include/mynumber/Export.hpp
 )
 
 set(MYNUMBER_PUBLIC_INCLUDES
@@ -69,6 +77,11 @@ set(MYNUMBER_PUBLIC_INCLUDES
 
 target_include_directories(mynumber_static PUBLIC ${MYNUMBER_PUBLIC_INCLUDES})
 target_include_directories(mynumber_shared PUBLIC ${MYNUMBER_PUBLIC_INCLUDES})
+set(MYNUMBER_PRIVATE_INCLUDES
+  $<BUILD_INTERFACE:${MYNUMBER_ROOT}/src>
+)
+target_include_directories(mynumber_static PRIVATE ${MYNUMBER_PRIVATE_INCLUDES})
+target_include_directories(mynumber_shared PRIVATE ${MYNUMBER_PRIVATE_INCLUDES})
 target_compile_definitions(mynumber_static PUBLIC MYNUMBER_BUILT_AS_STATIC)
 
 set_target_properties(mynumber_static mynumber_shared PROPERTIES
@@ -130,6 +143,20 @@ endif()
 add_library(mynumber::mynumber_static ALIAS mynumber_static)
 add_library(mynumber::mynumber_shared ALIAS mynumber_shared)
 
+if(WIN32)
+set(NATIVE_LIB_PATH "native-lib/")
+file(REAL_PATH ${NATIVE_LIB_PATH} ABSOLUTE_NATIVE_LIB_PATH)
+
+add_custom_command(
+    TARGET mynumber_static 
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${ABSOLUTE_NATIVE_LIB_PATH}"
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:mynumber_static> "${ABSOLUTE_NATIVE_LIB_PATH}"
+    COMMENT "Copying build artifact to destination..."
+    VERBATIM
+)
+endif()
+
 option(MYNUMBER_BUILD_CLI "Build CLI executable" ON)
 
 set(MYNUMBER_INSTALL_TARGETS mynumber_static mynumber_shared)
@@ -137,6 +164,7 @@ set(MYNUMBER_INSTALL_TARGETS mynumber_static mynumber_shared)
 if(MYNUMBER_BUILD_CLI)
   add_executable(mynumber_cli ${MYNUMBER_ROOT}/src/main.cpp)
   target_link_libraries(mynumber_cli PRIVATE mynumber_static)
+  target_include_directories(mynumber_cli PRIVATE ${MYNUMBER_PUBLIC_INCLUDES})
   target_compile_options(mynumber_cli PRIVATE ${MYNUMBER_COMPILE_OPTIONS})
   set_target_properties(mynumber_cli PROPERTIES OUTPUT_NAME mynumber)
   list(APPEND MYNUMBER_INSTALL_TARGETS mynumber_cli)
@@ -150,13 +178,10 @@ install(TARGETS ${MYNUMBER_INSTALL_TARGETS}
 )
 
 install(FILES ${MYNUMBER_ROOT}/include/mynumber.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY ${MYNUMBER_ROOT}/include/impl ${MYNUMBER_ROOT}/include/polyfill
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  FILES_MATCHING
-    PATTERN "*.hpp"
-    PATTERN "Export.hpp" EXCLUDE
+install(DIRECTORY ${MYNUMBER_ROOT}/include/mynumber DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.hpp"
 )
-install(FILES ${MYNUMBER_EXPORT_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/impl)
+install(FILES ${MYNUMBER_EXPORT_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mynumber)
 
 install(EXPORT mynumberTargets
   FILE mynumberTargets.cmake

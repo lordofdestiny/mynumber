@@ -5,3 +5,4 @@ out/
 .vscode/
 .format
 node_modules/
+emsdk/

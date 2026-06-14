@@ -9,7 +9,9 @@ namespace mynum::polyfill {
 using std::generator;
 }
 
-#elif __has_include(<generator>)
+#elif ((defined(__cplusplus) && __cplusplus >= 202300L) \
+    || (defined(_MSVC_LANG) && _MSVC_LANG >= 202300L)) \
+    || (__has_include(<generator>) && defined(__cpp_lib_generator))
 
 #include <generator>
 
@@ -28,7 +30,7 @@ using std::generator;
 
 namespace mynum::polyfill {
 
-template <class Ref, class Value = std::remove_cvref_t<Ref>, class R = Ref>
+template <class Ref, class Value = std::remove_cvref_t<Ref>>
 class generator {
 public:
   struct promise_type {
@@ -45,7 +47,6 @@ public:
       if (std::current_exception()) {
         std::rethrow_exception(std::current_exception());
       }
-      throw std::runtime_error("unhandled exception in generator");
     }
 
     std::suspend_always yield_value(const Value &value) {
@@ -63,7 +64,6 @@ public:
 
   using value_type = Value;
   using reference = Ref;
-  using rvalue_reference = Value &&;
 
   struct iterator {
     std::coroutine_handle<promise_type> coro_{};
@@ -76,7 +76,8 @@ public:
 
     iterator() = default;
 
-    explicit iterator(std::coroutine_handle<promise_type> coro, bool done) : coro_(coro), done_(done) {}
+    explicit iterator(std::coroutine_handle<promise_type> coro, bool done) 
+        : coro_(coro), done_(done) {}
 
     reference operator*() const { return coro_.promise().value_; }
 

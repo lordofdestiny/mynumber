@@ -18,7 +18,7 @@ enum class Operator : unsigned short {
   LAST = '?' << 3 | 6
 };
 
-EXPORT_API std::string to_string(Operator p);
+std::string to_string(Operator p);
 
 } // namespace mynum::impl
 

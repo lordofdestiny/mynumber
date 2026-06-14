@@ -1,8 +1,7 @@
 #ifndef __COMBINATION_WRAPPER_HPP__
 #define __COMBINATION_WRAPPER_HPP__
 
-#include <impl/Combination.hpp>
-
+#include <mynumber/Combination.hpp>
 #include <napi.h>
 
 class Combination : public Napi::ObjectWrap<Combination> {
@@ -31,7 +30,7 @@ private:
   static Napi::Value Generate(const Napi::CallbackInfo &info);
   static Napi::FunctionReference constructor;
 
-  mynum::impl::Combination comb_;
+  mynum::Combination comb_;
 };
 
 #endif

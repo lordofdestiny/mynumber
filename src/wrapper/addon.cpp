@@ -1,7 +1,7 @@
 #include <napi.h>
 
-#include <wrapper/Combination.hpp>
-#include <wrapper/Solution.hpp>
+#include "Combination.hpp"
+#include "Solution.hpp"
 
 Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
   Solution::Init(env);

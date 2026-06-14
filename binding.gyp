@@ -56,6 +56,7 @@
       ],
       "msvs_settings": {
         "VCCLCompilerTool": {
+          "AdditionalOptions!": [ "/W3" ],
           "AdditionalOptions": [ "/std:c++20", "/O2", "/W4" ]
         }
       },
