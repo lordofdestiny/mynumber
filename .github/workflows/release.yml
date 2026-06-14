@@ -19,11 +19,11 @@ jobs:
     name: Native source package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Create native CMake source package
         run: node scripts/package-source.mjs
@@ -36,7 +36,7 @@ jobs:
           cp "dist/release/mynumber-cmake-${VERSION}.tar.gz" upload/cmake-source/
 
       - name: Upload source package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: source-release
           path: upload/cmake-source/
@@ -93,7 +93,7 @@ jobs:
           ls -la upload/native-release/
 
       - name: Upload CPack artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-${{ matrix.os }}
           path: upload/native-release/
@@ -113,11 +113,11 @@ jobs:
           - os: windows-latest
             release_platform: windows
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install dependencies
         run: npm ci
@@ -167,7 +167,7 @@ jobs:
           Get-ChildItem "../../upload/node-release"
 
       - name: Upload node release archives
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: node-release-${{ matrix.os }}
           path: upload/node-release/
@@ -182,7 +182,7 @@ jobs:
     name: WebAssembly
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Emscripten
         run: |
@@ -196,7 +196,7 @@ jobs:
           make dist-wasm
 
       - name: Upload wasm artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wasm
           path: |
@@ -213,7 +213,7 @@ jobs:
           ls -la "../../upload/wasm-release/"
 
       - name: Upload wasm release archives
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wasm-release
           path: upload/wasm-release/
@@ -224,7 +224,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-wasm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download wasm
         uses: actions/download-artifact@v4
@@ -239,7 +239,7 @@ jobs:
           cp dist/wasm/mynumber.js dist/wasm/mynumber.wasm dist/demo/
 
       - name: Upload demo artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: demo
           path: dist/demo/
@@ -249,7 +249,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [package-source, build-native, build-node, build-wasm]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
@@ -278,11 +278,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-node, build-wasm, release]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: https://registry.npmjs.org
           scope: '@lordofdestiny'
         env:
