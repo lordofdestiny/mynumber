@@ -20,7 +20,7 @@ UNAME_S := $(shell uname -s || "")
 ifeq ($(UNAME_S),Darwin)
   LIB_EXT := dylib
   SLIB_EXT := a
-elifeq($(OS),Windows_NT)
+else ifeq ($(OS),Windows_NT)
   LIB_EXT := dll
   SLIB_EXT := lib
 else
