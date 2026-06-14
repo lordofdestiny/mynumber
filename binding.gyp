@@ -40,8 +40,18 @@
         [
           "OS=='win'",
           {
-            "libraries": [
-              "<(module_root_dir)/native-lib/mynumber.lib"
+            "sources+": [
+              "src/impl/Combination.cpp",
+              "src/impl/Operator.cpp",
+              "src/impl/StateValue.cpp",
+              "src/api/Combination.cpp",
+              "src/api/Solution.cpp",
+            ],
+            "defines" : [
+              "MYNUMBER_BUILT_AS_STATIC"
+            ],
+            "include_dirs+" : [
+              "src"
             ]
           }
         ],
@@ -56,8 +66,14 @@
       ],
       "msvs_settings": {
         "VCCLCompilerTool": {
-          "AdditionalOptions!": [ "/W3" ],
-          "AdditionalOptions": [ "/std:c++20", "/O2", "/W4" ]
+          "WarningLevel" : 4,
+          "DisableSpecificWarnings" : [ 4127 ],
+          "AdditionalOptions": [ "/std:c++20", "/O2" ]
+        }
+      },
+      "msbuild_settings": {
+        "ClCompile": {
+          "LanguageStandard": "stdcpp20"
         }
       },
       "include_dirs": [

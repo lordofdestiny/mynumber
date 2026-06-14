@@ -39,7 +39,7 @@ run('cmake', [
 ]);
 run('node', ['scripts/copy-native-static-lib.js', 'build/native']);
 run('node', [nodeGyp, 'configure']);
-run('node', [nodeGyp, 'build', '-j', String(jobs)]);
+run('node', [nodeGyp, 'build', '-j', String(jobs), "--verbose"]);
 
 if (!fs.existsSync(addonBin)) {
   throw new Error(`build-dist-node: expected addon at ${addonBin}`);
