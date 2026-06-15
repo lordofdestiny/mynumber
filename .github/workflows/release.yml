@@ -304,12 +304,12 @@ jobs:
         run: npm run lint:packages
 
       - name: Publish @lordofdestiny/mynumber
-        run: npm publish dist/npm/mynumber --access public
+        run: npm stage publish dist/npm/mynumber
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @lordofdestiny/mynumber-wasm
-        run: npm publish dist/npm/mynumber-wasm --access public
+        run: npm stage publish dist/npm/mynumber-wasm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

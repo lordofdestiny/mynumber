@@ -19,7 +19,8 @@
     "src",
     "CMakeLists.txt",
     "scripts",
-    "lib"
+    "lib",
+    "packaging"
   ],
   "scripts": {
     "install": "node scripts/install.js"
