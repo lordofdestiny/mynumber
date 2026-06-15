@@ -55,7 +55,7 @@ jobs:
           - os: windows-latest
     steps:
       - name: Download source package
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: source-release
           path: dist/release
@@ -269,7 +269,7 @@ jobs:
           }
 
       - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: release-assets/*
 
@@ -292,7 +292,7 @@ jobs:
         run: npm ci
 
       - name: Download wasm artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: wasm
           path: dist/wasm
@@ -322,13 +322,13 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Download demo
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: demo
           path: dist/demo
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
