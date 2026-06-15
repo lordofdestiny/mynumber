@@ -287,6 +287,9 @@ jobs:
           scope: '@lordofdestiny'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Upgrade npm to support staged publishing
+        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm ci
