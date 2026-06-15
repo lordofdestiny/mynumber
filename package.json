@@ -1,6 +1,6 @@
 {
   "name": "mynumber",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "private": true,
   "description": "Number combination puzzle solver — C++ library, Node.js addon, and WebAssembly",
   "main": "src/node/index.js",
