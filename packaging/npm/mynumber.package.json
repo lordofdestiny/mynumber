@@ -17,10 +17,11 @@
     "binding.gyp",
     "include",
     "src",
-    "CMakeLists.txt",
     "scripts",
     "lib",
-    "packaging"
+    "cmake",
+    "packaging",
+    "CMakeLists.txt"
   ],
   "scripts": {
     "install": "node scripts/install.js"
