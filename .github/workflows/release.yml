@@ -55,7 +55,7 @@ jobs:
           - os: windows-latest
     steps:
       - name: Download source package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: source-release
           path: dist/release
@@ -227,7 +227,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download wasm
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wasm
           path: dist/wasm
@@ -252,7 +252,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download all build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -292,7 +292,7 @@ jobs:
         run: npm ci
 
       - name: Download wasm artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: wasm
           path: dist/wasm
@@ -322,7 +322,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Download demo
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: demo
           path: dist/demo
@@ -331,10 +331,10 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist/demo
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
