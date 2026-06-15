@@ -101,10 +101,10 @@ npm run app
 This repository is a **private development monorepo**. Consumers install the scoped npm packages:
 
 
-| Package                                                                                      | Description                                           |
-| -------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `[@lordofdestiny/mynumber](https://www.npmjs.com/package/@lordofdestiny/mynumber)`           | Node.js addon — native binary with automatic fallback |
-| `[@lordofdestiny/mynumber-wasm](https://www.npmjs.com/package/@lordofdestiny/mynumber-wasm)` | WebAssembly build for Node.js and browsers            |
+| Package                                                                                    | Description                                           |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| [@lordofdestiny/mynumber](https://www.npmjs.com/package/@lordofdestiny/mynumber)           | Node.js addon — native binary with automatic fallback |
+| [@lordofdestiny/mynumber-wasm](https://www.npmjs.com/package/@lordofdestiny/mynumber-wasm) | WebAssembly build for Node.js and browsers            |
 
 
 Install the package that matches your runtime:
@@ -393,7 +393,7 @@ npm install /path/to/mojbroj/dist/npm/mynumber
 
 ## Releases
 
-Pushing a `v*` tag triggers `[.github/workflows/release.yml](.github/workflows/release.yml)`, which:
+Pushing a `v*` tag triggers [.github/workflows/release.yml](.github/workflows/release.yml), which:
 
 1. Creates `mynumber-cmake-{version}.zip` and `.tar.gz` — minimal native C++ source; used to build native CPack releases
 2. Builds native CPack `.tar.gz` and `.zip` archives from that package
@@ -404,7 +404,7 @@ Pushing a `v*` tag triggers `[.github/workflows/release.yml](.github/workflows/r
 
 ### Version bumps
 
-Version is defined in `[packaging/project.json](packaging/project.json)`. Bump with:
+Version is defined in [packaging/project.json](packaging/project.json). Bump with:
 
 ```bash
 npm version patch   # or minor / major
