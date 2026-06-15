@@ -47,36 +47,15 @@ function loadColocated() {
  * @returns {{ Combination: unknown; Solution?: unknown } | undefined}
  */
 function loadInstalledBinding() {
-  try {
-    const binding = path.join(__dirname, 'lib', 'binding');
-    if (!fs.existsSync(binding)) {
-      return undefined;
-    }
-    return require(binding);
-  } catch {
+  const binding = path.join(__dirname, 'lib', 'binding', "mynumber.node");
+  if (!fs.existsSync(binding)) {
     return undefined;
   }
-}
-
-/**
- * Tier 2 (compile): binary built locally by node-gyp during install.
- * node-gyp leaves N-API builds in build-tmp-napi-v8/Release (and similar dirs).
- * @returns {{ Combination: unknown; Solution?: unknown } | undefined}
- */
-function loadCompiled() {
-  const pkgPath = path.join(__dirname, 'package.json');
-  const pkg = require(pkgPath);
-  const binding = findCompiledBinding(__dirname, pkg);
-
-  if (!binding) {
-    return undefined;
-  }
-
   return require(binding);
 }
 
 /**
- * Tier 3 (pure JS): TypeScript fallback compiled to lib/js/index.js.
+ * Tier 2 (pure JS): TypeScript fallback compiled to lib/js/index.js.
  * @returns {{ Combination: unknown; Solution?: unknown } | undefined}
  */
 function loadJsFallback() {
@@ -90,7 +69,7 @@ function loadJsFallback() {
 
 /** @returns {{ addon: { Combination: unknown; Solution?: unknown }; features: { allSolutions: boolean }; implementation: 'native' | 'js' }} */
 function resolveAddon() {
-  const nativeLoaders = [loadColocated, loadInstalledBinding, loadCompiled];
+  const nativeLoaders = [loadColocated, loadInstalledBinding];
   const errors = [];
 
   for (const load of nativeLoaders) {
