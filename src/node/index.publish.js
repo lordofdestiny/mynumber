@@ -48,7 +48,7 @@ function loadColocated() {
  */
 function loadInstalledBinding() {
   try {
-    const binding = path.join(root, 'lib', 'binding');
+    const binding = path.join(__dirname, 'lib', 'binding');
     if (!fs.existsSync(binding)) {
       return undefined;
     }
