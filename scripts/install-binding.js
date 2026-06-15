@@ -6,8 +6,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const pkgPath = path.join(root, 'package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-const moduleName = pkg.binary?.module_name ?? 'mynumber';
-const napiVersions = pkg.binary?.napi_versions ?? [8];
+const moduleName = 'mynumber';
 
 /** @returns {string | undefined} */
 function findBindingPath() {
@@ -23,11 +22,9 @@ function findBindingPath() {
     }
   }
 
-  for (const version of napiVersions) {
-    const candidate = path.join(root, `build-tmp-napi-v${version}`, 'Release', `${moduleName}.node`);
-    if (fs.existsSync(candidate)) {
-      return candidate;
-    }
+  const prebuiltRoot = path.join(root, 'build', 'prebuilt', `${moduleName}.node`);
+  if (fs.existsSync(prebuiltRoot)) {
+    return prebuiltRoot;
   }
 
   const releaseCandidate = path.join(root, 'build', 'Release', `${moduleName}.node`);

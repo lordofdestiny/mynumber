@@ -17,12 +17,6 @@ const targets = [
   path.join(root, 'mynumber.node'),
 ];
 
-for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
-  if (entry.isDirectory() && entry.name.startsWith('build-tmp-napi-v')) {
-    targets.push(path.join(root, entry.name));
-  }
-}
-
 for (const target of targets) {
   if (!fs.existsSync(target)) {
     continue;

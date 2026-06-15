@@ -9,19 +9,11 @@ const path = require('path');
  * @returns {string | undefined}
  */
 function findCompiledBinding(packageRoot, pkg) {
-  const moduleName = pkg.binary?.module_name ?? 'mynumber';
-  const napiVersions = pkg.binary?.napi_versions ?? [8];
+  const moduleName = 'mynumber';
   const candidates = [
     path.join(packageRoot, 'build', 'Release', `${moduleName}.node`),
     path.join(packageRoot, 'build', 'Debug', `${moduleName}.node`),
   ];
-
-  for (const version of napiVersions) {
-    candidates.push(
-      path.join(packageRoot, `build-tmp-napi-v${version}`, 'Release', `${moduleName}.node`),
-      path.join(packageRoot, `build-tmp-napi-v${version}`, 'Debug', `${moduleName}.node`),
-    );
-  }
 
   const bindingRoot = path.join(packageRoot, 'lib', 'binding');
   if (fs.existsSync(bindingRoot)) {
@@ -55,11 +47,8 @@ function loadColocated() {
  * @returns {{ Combination: unknown; Solution?: unknown } | undefined}
  */
 function loadInstalledBinding() {
-  const preGyp = require('@mapbox/node-pre-gyp');
-  const pkgPath = path.join(__dirname, 'package.json');
-
   try {
-    const binding = preGyp.find(pkgPath);
+    const binding = path.join(root, 'lib', 'binding');
     if (!fs.existsSync(binding)) {
       return undefined;
     }

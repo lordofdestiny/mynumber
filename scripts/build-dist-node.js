@@ -3,6 +3,8 @@
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+
+const {runAt} = require('./common');
 const {
   cmakeBuildConfigArgs,
   cmakeConfigureArgs,
@@ -14,13 +16,7 @@ const addonBin = path.join(root, 'build/Release/mynumber.node');
 const jobs = Math.max(1, Number(process.env.JOBS) || require('node:os').cpus().length || 4);
 const nodeGyp = path.join(root, 'node_modules', 'node-gyp', 'bin', 'node-gyp.js');
 
-/** @param {string} command @param {string[]} args */
-function run(command, args) {
-  const result = spawnSync(command, args, { cwd: root, stdio: 'inherit' });
-  if (result.status !== 0) {
-    throw new Error(`${command} ${args.join(' ')} failed with status ${result.status ?? 'unknown'}`);
-  }
-}
+const run = (command, args) => runAt(root, command, args);
 
 run('cmake', [
   '-B',

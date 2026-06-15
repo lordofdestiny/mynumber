@@ -92,7 +92,13 @@ check "$NODE_ZIP" "node release zip"
 check "$NODE_TAR" "node release tar.gz"
 check_zip_contains "$NODE_ZIP" "mynumber.node" "node zip contains mynumber.node"
 check_zip_contains "$NODE_ZIP" "index.d.ts" "node zip contains index.d.ts"
-tar -tzf "$NODE_TAR" | grep -qx "mynumber.node" && echo "  OK  node tar contains mynumber.node" && PASS=$((PASS + 1)) || { echo "  FAIL node tar contains mynumber.node"; FAIL=$((FAIL + 1)); }
+if tar -tzf "$NODE_TAR" | grep -qx "mynumber.node"; then
+    echo "  OK  node tar contains mynumber.node"
+    PASS=$((PASS + 1))
+else
+    echo "  FAIL node tar contains mynumber.node"
+    FAIL=$((FAIL + 1))
+fi
 
 rm -rf dist/npm/mynumber/build dist/npm/mynumber/lib/binding
 

@@ -26,7 +26,7 @@ The core solver is a C++20 library (`mynum::impl`) shipped as static and shared 
 | `Combination::generate()` | Random Countdown-style puzzle |
 | `comb.solve()` | Best solution as `std::shared_ptr<StateValue>` |
 | `comb.allSolutions()` | All exact solutions (expensive) |
-| `StateValue::reconstruct()` | Expression string for a solution |
+| `StateValue::expression()` | Expression string for a solution |
 
 **Example**
 
@@ -39,7 +39,7 @@ using namespace mynum::impl;
 int main() {
   Combination comb{.target = 24, .numbers = {3, 3, 8, 8, 2, 2}};
   auto solution = comb.solve();
-  std::cout << solution->reconstruct() << " = " << solution->value << '\n';
+  std::cout << solution->expression() << " = " << solution->value << '\n';
 }
 ```
 

@@ -8,6 +8,7 @@ const {
   cmakeConfigureArgs,
   findBuiltStaticLib,
   staticLibFileName,
+  isWindows,
 } = require('./native-platform');
 
 const root = path.join(__dirname, '..');
@@ -45,21 +46,23 @@ if (!hasCmake()) {
 
 const jobs = Math.max(1, Number(process.env.JOBS) || require('node:os').cpus().length || 4);
 
-run('cmake', [
-  '-B',
-  'native-lib/cmake-build',
-  ...cmakeConfigureArgs(),
-  '-DMYNUMBER_BUILD_CLI=OFF',
-]);
-run('cmake', [
-  '--build',
-  'native-lib/cmake-build',
-  ...cmakeBuildConfigArgs(),
-  '--target',
-  'mynumber_static',
-  '--parallel',
-  String(jobs),
-]);
+if (!isWindows()) {
+  run('cmake', [
+    '-B',
+    'native-lib/cmake-build',
+    ...cmakeConfigureArgs(),
+    '-DMYNUMBER_BUILD_CLI=OFF',
+  ]);
+  run('cmake', [
+    '--build',
+    'native-lib/cmake-build',
+    ...cmakeBuildConfigArgs(),
+    '--target',
+    'mynumber_static',
+    '--parallel',
+    String(jobs),
+  ]);
+}
 
 const builtLib = findBuiltStaticLib(cmakeBuildDir);
 if (!builtLib) {
@@ -74,3 +77,5 @@ if (!fs.existsSync(libPath)) {
 }
 
 fs.rmSync(cmakeBuildDir, { recursive: true, force: true });
+
+run('node-gyp', ['rebuild', '-j', 'max', '--verbose']);

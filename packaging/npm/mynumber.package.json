@@ -25,17 +25,9 @@
     "install": "node scripts/install.js"
   },
   "gypfile": true,
-  "dependencies": {
-    "@mapbox/node-pre-gyp": "^2.0.0"
-  },
   "optionalDependencies": {
     "node-addon-api": "^8.8.0",
     "node-gyp": "^12.4.0"
-  },
-  "binary": {
-    "module_name": "mynumber",
-    "module_path": "./lib/binding/napi-v{napi_build_version}",
-    "napi_versions": [8]
   },
   "engines": {
     "node": ">=18.0.0"

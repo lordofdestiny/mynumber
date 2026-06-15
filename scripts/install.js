@@ -1,15 +1,15 @@
 'use strict';
 
-const { execSync } = require('node:child_process');
 const path = require('node:path');
 
-const root = path.join(__dirname, '..');
+const { runAt } = require('./common')
 const { hasBinding } = require('./install-binding');
+const { isWindows } = require('./native-platform')
 const { tryInstallFromNodeRelease } = require('./install-release-binary');
 
-function run(command) {
-  execSync(command, { cwd: root, stdio: 'inherit' });
-}
+const root = path.join(__dirname, '..');
+
+const run = (command, args) => runAt(root, command, args);
 
 async function main() {
   if (!hasBinding()) {
@@ -17,12 +17,11 @@ async function main() {
   }
 
   if (!hasBinding()) {
-    run('node scripts/install-build-lib.js');
-    run('node-pre-gyp rebuild');
-    run('node scripts/install-copy-binding.js');
+    run('node', ['scripts/install-build-lib.js']);
   }
 
-  run('node scripts/install-cleanup.js');
+  run('node', ['scripts/install-copy-binding.js']);
+  run('node', ['scripts/install-cleanup.js']);
 }
 
 main().catch((error) => {

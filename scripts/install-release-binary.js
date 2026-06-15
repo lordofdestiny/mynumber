@@ -6,37 +6,26 @@ const https = require('node:https');
 const { execSync } = require('node:child_process');
 const { releasePlatform, isWindows } = require('./native-platform');
 
+const { createWriteStream } = require('node:fs');
+const { Readable } = require('node:stream');
+const { pipeline } = require('node:stream/promises')
+
 const root = path.join(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 
 /** @param {string} url @param {string} dest */
-function downloadFile(url, dest) {
-  return new Promise((resolve, reject) => {
-    const request = (target) => {
-      https
-        .get(target, (response) => {
-          if (
-            response.statusCode &&
-            response.statusCode >= 300 &&
-            response.statusCode < 400 &&
-            response.headers.location
-          ) {
-            request(response.headers.location);
-            return;
-          }
-          if (response.statusCode !== 200) {
-            reject(new Error(`HTTP ${response.statusCode ?? 'unknown'} for ${target}`));
-            return;
-          }
-          const file = fs.createWriteStream(dest);
-          response.pipe(file);
-          file.on('finish', () => file.close(() => resolve()));
-          file.on('error', reject);
-        })
-        .on('error', reject);
-    };
-    request(url);
-  });
+async function downloadFile(url, dest) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} for ${url}`);
+  }
+
+  const rstream = Readable.fromWeb(response.body);
+  
+  const wstream = createWriteStream(dest);
+  
+  await pipeline(rstream, wstream);
 }
 
 /** @param {string} archivePath @param {string} bindingDir */
@@ -93,8 +82,7 @@ async function tryInstallFromNodeRelease() {
   const tmpDir = path.join(root, 'build', 'release-download');
   fs.mkdirSync(tmpDir, { recursive: true });
 
-  const napiVersion = pkg.binary?.napi_versions?.[0] ?? process.versions.napi;
-  const bindingDir = path.join(root, 'lib', 'binding', `napi-v${napiVersion}`);
+  const bindingDir = path.join(root, 'build', 'prebuilt');
   fs.mkdirSync(bindingDir, { recursive: true });
 
   for (const extension of extensions) {
@@ -116,7 +104,6 @@ async function tryInstallFromNodeRelease() {
         return true;
       }
     } catch {
-      // Try the next archive format.
     }
   }
 
